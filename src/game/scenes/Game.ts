@@ -76,10 +76,12 @@ export class Game extends Scene {
             this.actualizarGiro();
         } else if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
             this.ejecutarAccion('JUMP');
+        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+            this.ejecutarAccion('ACTIVATE');
         }
     }
 
-    async ejecutarAccion(tipo: 'WALK' | 'JUMP') {
+    async ejecutarAccion(tipo: 'WALK' | 'JUMP' | 'ACTIVATE') {
         this.isMoving = true;
 
         let nextX = this.robotPos.x;
@@ -90,31 +92,55 @@ export class Game extends Scene {
         else if (this.direction === 2) nextX--;
         else if (this.direction === 3) nextY--;
 
-        if (nextX < 0 || nextY < 0 || nextX >= MAP_DATA[0].length || nextY >= MAP_DATA.length) {
-            this.isMoving = false;
-            return;
-        }
-
         // Acceso correcto a la propiedad .h
         const currentZ = MAP_DATA[this.robotPos.y][this.robotPos.x].h;
-        const targetZ = MAP_DATA[nextY][nextX].h;
 
-        if (tipo === 'WALK') {
-            if (currentZ === targetZ) {
-                await this.animarMovimiento(nextX, nextY, targetZ, 'walk');
-            } else {
-                console.log("¡Obstáculo! Usa JUMP");
+        if (tipo === 'WALK' || tipo === 'JUMP') {
+            // Validar límites solo para movimientos que requieren moverse
+            if (nextX < 0 || nextY < 0 || nextX >= MAP_DATA[0].length || nextY >= MAP_DATA.length) {
+                this.isMoving = false;
+                return;
             }
-        } else if (tipo === 'JUMP') {
-            await this.animarMovimiento(nextX, nextY, targetZ, 'jump');
+
+            const targetZ = MAP_DATA[nextY][nextX].h;
+
+            if (tipo === 'WALK') {
+                if (currentZ === targetZ) {
+                    await this.animarMovimiento(nextX, nextY, targetZ, 'walk');
+                } else {
+                    console.log("¡Obstáculo! Usa JUMP");
+                }
+            } else {
+                await this.animarMovimiento(nextX, nextY, targetZ, 'jump');
+            }
+        } else if (tipo === 'ACTIVATE') {
+            // ACTIVATE no necesita validar límites, siempre se ejecuta en la posición actual
+            await this.animarMovimiento(this.robotPos.x, this.robotPos.y, this.robotPos.z, 'activate');
         }
 
         this.isMoving = false;
     }
 
-    async animarMovimiento(nx: number, ny: number, nz: number, tipoAnim: 'walk' | 'jump') {
+    async animarMovimiento(nx: number, ny: number, nz: number, tipoAnim: 'walk' | 'jump' | 'activate') {
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-        this.robot.play(`${tipoAnim}-${dirKey}`, true);
+        const animKey = `${tipoAnim}-${dirKey}`;
+
+        console.log(`Reproduciendo animación: ${animKey}`);
+        console.log(`¿Existe animación?`, this.anims.exists(animKey));
+
+        this.robot.play(animKey, true);
+        console.log(`Frame actual después de play:`, this.robot.frame.name);
+
+        // Para activación, solo reproducir animación sin movimiento
+        if (tipoAnim === 'activate') {
+            return new Promise<void>((resolve) => {
+                // Esperar a que termine la animación (2 frames a 10fps = ~200ms)
+                this.time.delayedCall(200, () => {
+                    this.robot.play(`idle-${dirKey}`);
+                    resolve();
+                });
+            });
+        }
 
         // Guardamos ambos depths
         const depthActual = ((this.robotPos.x + this.robotPos.y) * 100) + 1;
@@ -203,6 +229,7 @@ export class Game extends Scene {
         dirs.forEach((dir, i) => {
             const startFrameWalk = dir === 'se' ? 20 : dir === 'sw' ? 25 : dir === 'nw' ? 30 : 35;
             const startFrameJump = dir === 'se' ? 40 : dir === 'sw' ? 45 : dir === 'nw' ? 50 : 55;
+            const startFrameActivate = dir === 'se' ? 60 : dir === 'sw' ? 65 : dir === 'nw' ? 70 : 75;
 
             this.anims.create({
                 key: `idle-${dir}`,
@@ -218,6 +245,12 @@ export class Game extends Scene {
                 key: `jump-${dir}`,
                 frames: this.anims.generateFrameNumbers('robot', { start: startFrameJump, end: startFrameJump + 5 }),
                 frameRate: 10
+            });
+            this.anims.create({
+                key: `activate-${dir}`,
+                frames: this.anims.generateFrameNumbers('robot', { start: startFrameActivate, end: startFrameActivate + 1 }),
+                frameRate: 10,
+                duration: 2000,
             });
         });
     }
