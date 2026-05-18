@@ -259,14 +259,12 @@ export class Game extends Scene {
 
         // Validate bounds
         if (nextX < 0 || nextY < 0 || nextX >= map[0].length || nextY >= map.length) {
-            await this.delay(200 / this.executionSpeed);
-            return;
+            throw new Error('Cannot move out of bounds!');
         }
 
         // Check for blocked tiles
         if (BLOCKED_TILES.includes(map[nextY][nextX].t)) {
-            await this.delay(200 / this.executionSpeed);
-            return;
+            throw new Error('Path is blocked by an obstacle!');
         }
 
         const currentZ = map[this.robotPos.y][this.robotPos.x].h;
@@ -276,14 +274,14 @@ export class Game extends Scene {
             if (currentZ === targetZ) {
                 await this.animateMovement(nextX, nextY, targetZ, 'walk');
             } else {
-                await this.delay(200 / this.executionSpeed);
+                throw new Error('Cannot walk: height difference detected!');
             }
         } else {
-            // JUMP (SALTO) — permitir cambio de altura de hasta 1
-            if (Math.abs(currentZ - targetZ) <= 1) {
+            // JUMP (SALTO) — permitir cambio de altura de exactamente 1
+            if (Math.abs(currentZ - targetZ) === 1) {
                 await this.animateMovement(nextX, nextY, targetZ, 'jump');
             } else {
-                await this.delay(200 / this.executionSpeed);
+                throw new Error('Cannot jump: height difference must be exactly 1 level!');
             }
         }
     }
