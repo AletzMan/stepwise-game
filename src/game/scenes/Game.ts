@@ -1,89 +1,254 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { Command, LevelData, TileInfo, TILE, BLOCKED_TILES, getLevel } from '../levels';
 
-// Definimos la estructura de los datos del mapa
-interface TileInfo {
-    h: number; // Altura (Z)
-    t: number; // Tipo (Frame del tile)
-}
-
-const MAP_DATA: TileInfo[][] = [
-    [{ h: 0, t: 1 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 1, t: 2 }, { h: 2, t: 2 }, { h: 3, t: 2 }, { h: 4, t: 2 }],
-    [{ h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }],
-    [{ h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }],
-    [{ h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }],
-    [{ h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }],
-    [{ h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }],
-    [{ h: 0, t: 3 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }, { h: 0, t: 0 }]
-];
-
-const TILE = { GRIS: 0, MORADO: 1, AMARILLO: 2, AZUL: 3, AGUA: 4, MADERA: 5 };
 const HEIGHT_STEP = 16;
 
 export class Game extends Scene {
     robotPos: { x: number; y: number; z: number };
     direction: number;
-    isMoving: boolean;
+    isRunning: boolean;
+    shouldStop: boolean;
     robot: Phaser.GameObjects.Sprite;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    keySpace: Phaser.Input.Keyboard.Key;
-    casillasMeta: Record<string, Phaser.GameObjects.Image>;
+    shadow: Phaser.GameObjects.Ellipse;
+    goalTiles: Record<string, Phaser.GameObjects.Image>;
+    activatedGoals: Set<string>;
+    currentLevel: LevelData | null;
+    mapObjects: Phaser.GameObjects.Image[];
+    executionSpeed: number;
+    idleFloatingTween: Phaser.Tweens.Tween | null;
 
     constructor() {
         super('Game');
         this.robotPos = { x: 0, y: 0, z: 0 };
         this.direction = 0;
-        this.isMoving = false;
-        this.casillasMeta = {}; // IMPORTANTE: Inicializar
+        this.isRunning = false;
+        this.shouldStop = false;
+        this.goalTiles = {};
+        this.activatedGoals = new Set();
+        this.currentLevel = null;
+        this.mapObjects = [];
+        this.executionSpeed = 0.5;
+        this.idleFloatingTween = null;
     }
 
     preload() {
         this.load.spritesheet('robot', 'assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
-        // Cargamos los tiles como spritesheet para usar los frames (0, 1, 2...)
         this.load.spritesheet('tiles', 'assets/tiles.png', { frameWidth: 64, frameHeight: 64 });
     }
 
     create() {
-        this.crearMapa();
+        this.createAnimations();
 
-        // Accedemos a .h para la altura inicial
-        this.robotPos.z = MAP_DATA[0][0].h;
-        const startPos = this.cartToIso(0, 0, this.robotPos.z);
+        // Escuchar eventos desde la interfaz de React
+        EventBus.on('load-level', (levelId: number) => {
+            this.loadLevel(levelId);
+        });
 
-        this.robot = this.add.sprite(startPos.x, startPos.y, 'robot').setOrigin(0.5, 0.95);
-        this.robot.setDepth(2000);
-        this.robot.setScale(0.8);
+        EventBus.on('run-program', (data: {
+            main: Command[];
+            f1: Command[];
+            f2: Command[];
+            f3: Command[];
+        }) => {
+            this.runProgram(data.main, data.f1, data.f2, data.f3);
+        });
 
-        this.crearAnimaciones();
+        EventBus.on('stop-program', () => {
+            this.stopProgram();
+        });
 
-        this.cursors = this.input.keyboard!.createCursorKeys();
-        this.keySpace = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        EventBus.on('reset-level', () => {
+            if (this.currentLevel) {
+                this.loadLevel(this.currentLevel.id);
+            }
+        });
+
+        EventBus.on('set-speed', (speed: number) => {
+            this.executionSpeed = speed;
+            if (this.robot && this.robot.anims) {
+                this.robot.anims.timeScale = speed;
+            }
+        });
+
+        // Cargar el nivel 1 por defecto
+        this.loadLevel(1);
 
         EventBus.emit('current_scene', 'Game');
     }
 
-    update() {
-        if (this.isMoving) return;
+    loadLevel(levelId: number) {
+        const level = getLevel(levelId);
+        if (!level) return;
 
-        if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-            this.ejecutarAccion('WALK');
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-            this.direction = (this.direction + 3) % 4;
-            this.actualizarGiro();
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-            this.direction = (this.direction + 1) % 4;
-            this.actualizarGiro();
-        } else if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
-            this.ejecutarAccion('JUMP');
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-            this.ejecutarAccion('ACTIVATE');
+        this.currentLevel = level;
+        this.shouldStop = true; // Detener cualquier ejecución actual
+        this.isRunning = false;
+        this.tweens.killAll(); // Finalizar todos los movimientos activos
+        this.activatedGoals = new Set();
+
+        // Limpiar el mapa existente
+        this.mapObjects.forEach(obj => obj.destroy());
+        this.mapObjects = [];
+        this.goalTiles = {};
+
+        // Destruir el robot existente si está presente
+        if (this.robot) {
+            this.robot.destroy();
+        }
+        if (this.shadow) {
+            this.shadow.destroy();
+        }
+
+        // Configurar la posición del robot
+        this.robotPos = {
+            x: level.startPos.x,
+            y: level.startPos.y,
+            z: level.map[level.startPos.y][level.startPos.x].h,
+        };
+        this.direction = level.startDirection;
+
+        // Crear el mapa
+        this.createMap(level.map);
+
+        // Crear el robot
+        const startPos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
+
+        this.shadow = this.add.ellipse(startPos.x, startPos.y, 24, 12, 0x000000, 0.25);
+        this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1);
+
+        this.robot = this.add.sprite(startPos.x, startPos.y, 'robot').setOrigin(0.55, 0.95);
+        this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
+        this.robot.setScale(0.85);
+
+        // Reproducir la animación de reposo (idle)
+        const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
+        const idleFrame = this.direction * 4;
+        this.robot.setFrame(idleFrame);
+        this.robot.play(`idle-${dirKey}`, true);
+        if (this.robot.anims) {
+            this.robot.anims.timeScale = this.executionSpeed;
+        }
+
+
+        this.shouldStop = false; // Permitir una nueva ejecución
+
+        EventBus.emit('level-loaded', {
+            id: level.id,
+            name: level.name,
+            description: level.description,
+            availableCommands: level.availableCommands,
+            mainSlots: level.mainSlots,
+            f1Slots: level.f1Slots,
+            f2Slots: level.f2Slots,
+            f3Slots: level.f3Slots,
+        });
+    }
+
+    async runProgram(main: Command[], f1: Command[], f2: Command[], f3: Command[]) {
+        if (this.isRunning) return;
+
+        // Reiniciar el estado del nivel sin volver a cargar los elementos visuales
+        this.resetRobotPosition();
+
+        this.isRunning = true;
+        this.shouldStop = false;
+        this.activatedGoals = new Set();
+
+        // Restablecer los elementos visuales de las casillas objetivo
+        for (const key of Object.keys(this.goalTiles)) {
+            const tile = this.goalTiles[key];
+            tile.setAlpha(1);
+            tile.setTint(0xffffff);
+        }
+
+        EventBus.emit('execution-start');
+
+        try {
+            await this.executeCommandList(main, f1, f2, f3, 0);
+
+            if (!this.shouldStop) {
+                // Verificar si todos los objetivos están activados
+                const allGoals = this.currentLevel?.goals || [];
+                const allActivated = allGoals.every(g => this.activatedGoals.has(`${g.x},${g.y}`));
+
+                if (allActivated) {
+                    EventBus.emit('level-complete', this.currentLevel?.id);
+                } else {
+                    EventBus.emit('execution-complete', { success: false, message: 'Not all goals activated' });
+                }
+            }
+        } catch (err) {
+            if (!this.shouldStop) {
+                EventBus.emit('execution-fail', (err as Error).message);
+            }
+        }
+
+        this.isRunning = false;
+        this.updateRotation();
+        EventBus.emit('execution-end');
+    }
+
+    async executeCommandList(
+        commands: Command[],
+        f1: Command[],
+        f2: Command[],
+        f3: Command[],
+        depth: number
+    ) {
+        if (depth > 15) {
+            throw new Error('Maximum recursion depth exceeded');
+        }
+
+        for (let i = 0; i < commands.length; i++) {
+            if (this.shouldStop) return;
+
+            const cmd = commands[i];
+            EventBus.emit('execution-step', { command: cmd, index: i, depth });
+
+            if (cmd === 'F1') {
+                await this.executeCommandList(f1, f1, f2, f3, depth + 1);
+            } else if (cmd === 'F2') {
+                await this.executeCommandList(f2, f1, f2, f3, depth + 1);
+            } else if (cmd === 'F3') {
+                await this.executeCommandList(f3, f1, f2, f3, depth + 1);
+            } else {
+                await this.executeSingleCommand(cmd);
+            }
         }
     }
 
-    async ejecutarAccion(tipo: 'WALK' | 'JUMP' | 'ACTIVATE') {
-        this.isMoving = true;
+    async executeSingleCommand(cmd: Command) {
+        if (this.shouldStop) return;
 
+        switch (cmd) {
+            case 'WALK':
+                await this.executeMovement('WALK');
+                break;
+            case 'JUMP':
+                await this.executeMovement('JUMP');
+                break;
+            case 'TURN_LEFT':
+                this.direction = (this.direction + 3) % 4;
+                this.updateRotation();
+                await this.delay(250 / this.executionSpeed);
+                break;
+            case 'TURN_RIGHT':
+                this.direction = (this.direction + 1) % 4;
+                this.updateRotation();
+                await this.delay(250 / this.executionSpeed);
+                break;
+            case 'ACTIVATE':
+                await this.executeActivate();
+                break;
+        }
+    }
+
+    async executeMovement(type: 'WALK' | 'JUMP') {
+        if (!this.currentLevel || this.shouldStop) return;
+
+        const map = this.currentLevel.map;
         let nextX = this.robotPos.x;
         let nextY = this.robotPos.y;
 
@@ -92,99 +257,224 @@ export class Game extends Scene {
         else if (this.direction === 2) nextX--;
         else if (this.direction === 3) nextY--;
 
-        // Acceso correcto a la propiedad .h
-        const currentZ = MAP_DATA[this.robotPos.y][this.robotPos.x].h;
-
-        if (tipo === 'WALK' || tipo === 'JUMP') {
-            // Validar límites solo para movimientos que requieren moverse
-            if (nextX < 0 || nextY < 0 || nextX >= MAP_DATA[0].length || nextY >= MAP_DATA.length) {
-                this.isMoving = false;
-                return;
-            }
-
-            const targetZ = MAP_DATA[nextY][nextX].h;
-
-            if (tipo === 'WALK') {
-                if (currentZ === targetZ) {
-                    await this.animarMovimiento(nextX, nextY, targetZ, 'walk');
-                } else {
-                    console.log("¡Obstáculo! Usa JUMP");
-                }
-            } else {
-                await this.animarMovimiento(nextX, nextY, targetZ, 'jump');
-            }
-        } else if (tipo === 'ACTIVATE') {
-            // ACTIVATE no necesita validar límites, siempre se ejecuta en la posición actual
-            await this.animarMovimiento(this.robotPos.x, this.robotPos.y, this.robotPos.z, 'activate');
+        // Validate bounds
+        if (nextX < 0 || nextY < 0 || nextX >= map[0].length || nextY >= map.length) {
+            await this.delay(200 / this.executionSpeed);
+            return;
         }
 
-        this.isMoving = false;
+        // Check for blocked tiles
+        if (BLOCKED_TILES.includes(map[nextY][nextX].t)) {
+            await this.delay(200 / this.executionSpeed);
+            return;
+        }
+
+        const currentZ = map[this.robotPos.y][this.robotPos.x].h;
+        const targetZ = map[nextY][nextX].h;
+
+        if (type === 'WALK') {
+            if (currentZ === targetZ) {
+                await this.animateMovement(nextX, nextY, targetZ, 'walk');
+            } else {
+                await this.delay(200 / this.executionSpeed);
+            }
+        } else {
+            // JUMP (SALTO) — permitir cambio de altura de hasta 1
+            if (Math.abs(currentZ - targetZ) <= 1) {
+                await this.animateMovement(nextX, nextY, targetZ, 'jump');
+            } else {
+                await this.delay(200 / this.executionSpeed);
+            }
+        }
     }
 
-    async animarMovimiento(nx: number, ny: number, nz: number, tipoAnim: 'walk' | 'jump' | 'activate') {
+    async executeActivate() {
+        if (this.shouldStop) return;
+        const key = `${this.robotPos.x},${this.robotPos.y}`;
+
+        // Reproducir la animación de activación
+        await this.animateMovement(this.robotPos.x, this.robotPos.y, this.robotPos.z, 'activate');
+
+        // Verificar si se encuentra sobre una casilla objetivo
+        if (this.goalTiles[key]) {
+            this.activatedGoals.add(key);
+            this.goalTiles[key].setTint(0x00ff88);
+
+            // Verificar si el nivel está completado
+            const allGoals = this.currentLevel?.goals || [];
+            const allActivated = allGoals.every(g => this.activatedGoals.has(`${g.x},${g.y}`));
+            if (allActivated) {
+                this.shouldStop = true;
+                EventBus.emit('level-complete', this.currentLevel?.id);
+            }
+        }
+    }
+
+    stopProgram() {
+        this.shouldStop = true;
+        this.isRunning = false;
+        this.tweens.killAll(); // Importante: Detener todas las interpolaciones (tweens) activas
+        this.idleFloatingTween = null;
+        this.updateRotation();
+    }
+
+    resetRobotPosition() {
+        if (!this.currentLevel) return;
+
+        const level = this.currentLevel;
+        this.shouldStop = true;
+        this.tweens.killAll();
+
+        this.robotPos = {
+            x: level.startPos.x,
+            y: level.startPos.y,
+            z: level.map[level.startPos.y][level.startPos.x].h,
+        };
+        this.direction = level.startDirection;
+        this.activatedGoals = new Set();
+
+        // Restablecer los elementos visuales de las casillas objetivo
+        for (const key of Object.keys(this.goalTiles)) {
+            this.goalTiles[key].setTint(0xffffff);
+        }
+
+        // Restablecer el aspecto visual del robot
+        const startPos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
+        if (this.shadow) {
+            this.shadow.setPosition(startPos.x, startPos.y);
+            this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1);
+            this.shadow.setScale(1);
+        }
+        if (this.robot) {
+            this.robot.setPosition(startPos.x, startPos.y);
+            this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
+
+            const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
+            const idleFrame = this.direction * 4;
+            this.robot.stop();
+            this.robot.setFrame(idleFrame);
+            this.robot.play(`idle-${dirKey}`, true);
+            if (this.robot.anims) {
+                this.robot.anims.timeScale = this.executionSpeed;
+            }
+        }
+
+        this.shouldStop = false;
+    }
+
+    delay(ms: number): Promise<void> {
+        return new Promise(resolve => {
+            this.time.delayedCall(ms, resolve);
+        });
+    }
+
+    async animateMovement(nextX: number, nextY: number, nextZ: number, animType: 'walk' | 'jump' | 'activate') {
+        if (!this.robot || !this.robot.active) return;
+
+        this.stopIdleFloating();
+
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-        const animKey = `${tipoAnim}-${dirKey}`;
+        const animKey = `${animType}-${dirKey}`;
 
-        console.log(`Reproduciendo animación: ${animKey}`);
-        console.log(`¿Existe animación?`, this.anims.exists(animKey));
+        // Caminar continúa fluidamente por las casillas, pero saltar y activar deben reiniciarse
+        if (animType === 'walk') {
+            this.robot.play(animKey, true);
+        } else {
+            this.robot.play(animKey);
+        }
 
-        this.robot.play(animKey, true);
-        console.log(`Frame actual después de play:`, this.robot.frame.name);
+        if (this.robot.anims) {
+            this.robot.anims.timeScale = this.executionSpeed;
+        }
 
-        // Para activación, solo reproducir animación sin movimiento
-        if (tipoAnim === 'activate') {
+        // Para la activación, solo reproducir la animación sin movimiento
+        if (animType === 'activate') {
             return new Promise<void>((resolve) => {
-                // Esperar a que termine la animación (2 frames a 10fps = ~200ms)
-                this.time.delayedCall(200, () => {
-                    this.robot.play(`idle-${dirKey}`);
+                this.time.delayedCall(200 / this.executionSpeed, () => {
+                    if (this.shouldStop || !this.robot || !this.robot.active) {
+                        resolve();
+                        return;
+                    }
+                    const idleFrame = this.direction * 4;
+                    this.robot.stop();
+                    this.robot.setFrame(idleFrame);
+                    this.robot.play(`idle-${dirKey}`, true);
+                    if (this.robot.anims) {
+                        this.robot.anims.timeScale = this.executionSpeed;
+                    }
+                    //this.startIdleFloating();
                     resolve();
                 });
             });
         }
 
-        // Guardamos ambos depths
-        const depthActual = ((this.robotPos.x + this.robotPos.y) * 100) + 1;
-        const depthDestino = ((nx + ny) * 100) + 1;
+        // Almacenar ambas profundidades (depths)
+        const currentDepth = ((this.robotPos.x + this.robotPos.y) * 100) + 1;
+        const targetDepth = ((nextX + nextY) * 100) + 1;
 
-        // Guardamos la posición inicial en pantalla
-        const startX = this.robot.x;
+        const currentShadowDepth = ((this.robotPos.x + this.robotPos.y) * 100) + 0.1;
+        const targetShadowDepth = ((nextX + nextY) * 100) + 0.1;
+
+        // Almacenar la posición inicial en pantalla
         const startY = this.robot.y;
 
-        // Calculamos la posición final en pantalla
-        const screenPos = this.cartToIso(nx, ny, nz);
+        // Calcular la posición final en pantalla
+        const screenPos = this.cartToIso(nextX, nextY, nextZ);
 
         // Altura máxima del arco
-        const jumpHeight = tipoAnim === 'jump' ? 10 : 0;
+        const jumpHeight = animType === 'jump' ? 10 : 0;
 
         return new Promise<void>((resolve) => {
+            if (this.shouldStop) {
+                resolve();
+                return;
+            }
+
+            const targets = this.shadow ? [this.robot, this.shadow] : [this.robot];
+
             this.tweens.add({
-                targets: this.robot,
+                targets: targets,
                 x: screenPos.x,
                 y: screenPos.y,
-                duration: 400,
+                duration: 400 / this.executionSpeed,
                 ease: 'Linear',
                 onUpdate: (tween) => {
+                    if (!this.robot || !this.robot.active) return;
                     const progress = tween.progress;
 
-                    // 1. Aplicamos el arco de salto si es necesario
-                    if (tipoAnim === 'jump') {
+                    // Aplicar arco de salto si es necesario
+                    if (animType === 'jump') {
                         const arc = Math.sin(Math.PI * progress) * jumpHeight;
                         this.robot.y = (startY + (screenPos.y - startY) * progress) - arc;
+                        if (this.shadow) {
+                            this.shadow.setScale(1 - (Math.sin(Math.PI * progress) * 0.3));
+                        }
                     }
 
-                    // --- 2. EL ARREGLO MÁGICO DEL DEPTH ---
-                    // Si va a menos de la mitad del camino, conserva el depth de origen.
-                    // Si ya cruzó la mitad, adquiere el depth de destino.
-                    if (progress < 0.4) {
-                        this.robot.setDepth(depthActual);
+                    // Gestión de la profundidad (depth)
+                    if (progress < 0.1) {
+                        this.robot.setDepth(currentDepth);
+                        if (this.shadow) this.shadow.setDepth(currentShadowDepth);
+                    } else if (progress > 0.9) {
+                        this.robot.setDepth(targetDepth);
+                        if (this.shadow) this.shadow.setDepth(targetShadowDepth);
                     } else {
-                        this.robot.setDepth(depthDestino);
+                        this.robot.setDepth(Math.max(currentDepth, targetDepth));
+                        if (this.shadow) this.shadow.setDepth(Math.max(currentShadowDepth, targetShadowDepth));
                     }
                 },
                 onComplete: () => {
-                    this.robotPos = { x: nx, y: ny, z: nz };
-                    this.robot.setDepth(depthDestino);
-                    this.robot.play(`idle-${dirKey}`);
+                    if (this.shouldStop || !this.robot || !this.robot.active) {
+                        resolve();
+                        return;
+                    }
+                    this.robotPos = { x: nextX, y: nextY, z: nextZ };
+                    this.robot.setDepth(targetDepth);
+                    if (this.shadow) {
+                        this.shadow.setDepth(targetShadowDepth);
+                        this.shadow.setScale(1);
+                    }
+
                     resolve();
                 }
             });
@@ -192,65 +482,110 @@ export class Game extends Scene {
     }
 
     cartToIso(x: number, y: number, z: number) {
-        const tx = (x - y) * (64 / 2) + 400;
-        // Formula: PosY_base - (Z * Altura_bloque)
-        const ty = (x + y) * (32 / 2) + 150 - (z * HEIGHT_STEP);
+        const tileW = 64;
+        const tileH = 32;
+        const hw = tileW / 2;
+        const hh = tileH / 2;
+
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+
+        const mapW = this.currentLevel ? this.currentLevel.map[0].length : 7;
+        const mapH = this.currentLevel ? this.currentLevel.map.length : 7;
+
+        const mapCenterX = (mapW - 1) / 2;
+        const mapCenterY = (mapH - 1) / 2;
+
+        const offsetX = cx - (mapCenterX - mapCenterY) * hw;
+        const offsetY = cy - (mapCenterX + mapCenterY) * hh;
+
+        const tx = (x - y) * hw + offsetX;
+        const ty = (x + y) * hh + offsetY - (z * HEIGHT_STEP);
+
         return { x: tx, y: ty };
     }
 
-    crearMapa() {
-        for (let y = 0; y < MAP_DATA.length; y++) {
-            for (let x = 0; x < MAP_DATA[y].length; x++) {
-                const info = MAP_DATA[y][x];
+    createMap(mapData: TileInfo[][]) {
+        for (let y = 0; y < mapData.length; y++) {
+            for (let x = 0; x < mapData[y].length; x++) {
+                const tileInfo = mapData[y][x];
 
-                for (let z = 0; z <= info.h; z++) {
+                for (let z = 0; z <= tileInfo.h; z++) {
                     const pos = this.cartToIso(x, y, z);
-                    const frameDeseado = (z === info.h) ? info.t : TILE.GRIS;
+                    const targetFrame = (z === tileInfo.h) ? tileInfo.t : TILE.GRAY;
 
-                    const bloque = this.add.image(pos.x, pos.y, 'tiles', frameDeseado);
-                    //bloque.setDepth(x + y + z);
-                    bloque.setDepth((x + y) * 100);
+                    const block = this.add.image(pos.x, pos.y, 'tiles', targetFrame);
+                    block.setDepth((x + y) * 100);
+                    this.mapObjects.push(block);
 
-                    if (z === info.h && info.t === TILE.MORADO) {
-                        this.casillasMeta[`${x},${y}`] = bloque;
+                    if (z === tileInfo.h && tileInfo.t === TILE.PURPLE) {
+                        this.goalTiles[`${x},${y}`] = block;
                     }
                 }
             }
         }
     }
 
-    actualizarGiro() {
+    updateRotation() {
+        if (!this.robot || !this.robot.active) return;
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-        this.robot.play(`idle-${dirKey}`); // Corregido de this.player a this.robot
+        const idleFrame = this.direction * 4;
+        this.robot.stop();
+        this.robot.setFrame(idleFrame);
+        this.robot.play(`idle-${dirKey}`, true);
+        if (this.robot.anims) {
+            this.robot.anims.timeScale = this.executionSpeed;
+        }
     }
 
-    crearAnimaciones() {
-        const dirs = ['se', 'sw', 'nw', 'ne'];
-        dirs.forEach((dir, i) => {
+
+    private stopIdleFloating() {
+        if (this.idleFloatingTween) {
+            this.idleFloatingTween.stop();
+            this.idleFloatingTween = null;
+
+            // Volver a la posición base
+            const basePos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
+            if (this.robot) {
+                this.robot.y = basePos.y;
+            }
+            if (this.shadow) {
+                this.shadow.setScale(1);
+            }
+        }
+    }
+
+    createAnimations() {
+        const directions = ['se', 'sw', 'nw', 'ne'];
+        directions.forEach((dir) => {
+            const startFrameIdle = dir === 'se' ? 0 : dir === 'sw' ? 4 : dir === 'nw' ? 8 : 12;
             const startFrameWalk = dir === 'se' ? 20 : dir === 'sw' ? 25 : dir === 'nw' ? 30 : 35;
             const startFrameJump = dir === 'se' ? 40 : dir === 'sw' ? 45 : dir === 'nw' ? 50 : 55;
             const startFrameActivate = dir === 'se' ? 60 : dir === 'sw' ? 65 : dir === 'nw' ? 70 : 75;
 
             this.anims.create({
                 key: `idle-${dir}`,
-                frames: [{ key: 'robot', frame: i }]
+                frames: this.anims.generateFrameNumbers('robot', { start: startFrameIdle, end: startFrameIdle + 3 }),
+                frameRate: 4,
+                repeatDelay: 6000,
+                repeat: -1,
+                delay: 100
             });
             this.anims.create({
                 key: `walk-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameWalk, end: startFrameWalk + 3 }),
-                frameRate: 13,
+                frames: this.anims.generateFrameNumbers('robot', { start: startFrameWalk, end: startFrameWalk + 4 }),
+                frameRate: 10,
                 repeat: -1
             });
             this.anims.create({
                 key: `jump-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameJump, end: startFrameJump + 5 }),
-                frameRate: 10
+                frames: this.anims.generateFrameNumbers('robot', { start: startFrameJump, end: startFrameJump + 4 }),
+                frameRate: 12.5
             });
             this.anims.create({
                 key: `activate-${dir}`,
                 frames: this.anims.generateFrameNumbers('robot', { start: startFrameActivate, end: startFrameActivate + 1 }),
-                frameRate: 10,
-                duration: 2000,
+                frameRate: 10
             });
         });
     }

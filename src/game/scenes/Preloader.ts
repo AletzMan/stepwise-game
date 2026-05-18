@@ -9,19 +9,19 @@ export class Preloader extends Scene
 
     init ()
     {
-        //  We loaded this image in our Boot Scene, so we can display it here
+        //  Cargamos esta imagen en nuestra escena de Boot, así que podemos mostrarla aquí
         this.add.image(512, 384, 'background');
 
-        //  A simple progress bar. This is the outline of the bar.
+        //  Una barra de progreso simple. Este es el contorno de la barra.
         this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
 
-        //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
+        //  Esta es la barra de progreso en sí. Aumentará de tamaño desde la izquierda según el % de progreso.
         const bar = this.add.rectangle(512-230, 384, 4, 28, 0xffffff);
 
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
+        //  Utilizar el evento 'progress' emitido por LoaderPlugin para actualizar la barra de carga
         this.load.on('progress', (progress: number) => {
 
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
+            //  Actualizar la barra de progreso (nuestra barra tiene 464px de ancho, así que 100% = 464px)
             bar.width = 4 + (460 * progress);
 
         });
@@ -29,7 +29,7 @@ export class Preloader extends Scene
 
     preload ()
     {
-        //  Load the assets for the game - Replace with your own assets
+        //  Cargar los recursos para el juego - Reemplázalos con tus propios recursos
         this.load.setPath('assets');
 
         this.load.image('logo', 'logo.png');
@@ -38,10 +38,10 @@ export class Preloader extends Scene
 
     create ()
     {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
+        //  Cuando se hayan cargado todos los recursos, suele valer la pena crear objetos globales aquí que el resto del juego pueda usar.
+        //  Por ejemplo, puedes definir animaciones globales aquí para poder usarlas en otras escenas.
 
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('MainMenu');
+        //  Ir a MainMenu. También podrías cambiar esto por una transición de escena, como un desvanecimiento de cámara.
+        this.scene.start('Game');
     }
 }

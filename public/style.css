@@ -1,48 +1,700 @@
-body {
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1a2236;
+    --bg-panel: #0f1629;
+    --border-color: #1e2a45;
+    --border-glow: #22d3ee30;
+    --text-primary: #e8ecf4;
+    --text-secondary: #8899b4;
+    --text-muted: #4a5568;
+    --accent-cyan: #22d3ee;
+    --accent-green: #34d399;
+    --accent-red: #f87171;
+    --accent-yellow: #fbbf24;
+    --accent-purple: #a78bfa;
+    --accent-pink: #f472b6;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 12px;
+    --shadow-glow: 0 0 20px rgba(34, 211, 238, 0.1);
+}
+
+* {
     margin: 0;
     padding: 0;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #000000; 
-    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    height: 100vh;
 }
 
 #app {
     width: 100%;
     height: 100vh;
-    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.spritePosition {
-    margin: 10px 0 0 10px;
-    font-size: 0.8em;
+/* ─── GAME WRAPPER ─────────────────────────────────────────────── */
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1280px;
+    height: 100vh;
+    padding: 8px;
+    gap: 8px;
 }
 
-.button {
-    width: 140px;
-    margin: 10px;
-    padding: 10px;
-    background-color: #000000;
-    color: rgba(255, 255, 255, 0.87);
-    border: 1px solid rgba(255, 255, 255, 0.87);
+/* ─── HEADER ───────────────────────────────────────────────────── */
+.game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-glow);
+    min-height: 56px;
+}
+
+.game-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 16px;
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 20px;
+}
+
+.level-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.level-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.btn-levels {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 16px;
+    background: rgba(167, 139, 250, 0.1);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    color: var(--accent-purple);
+    border-radius: 20px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
+}
 
-    &:hover {
-        border: 1px solid #0ec3c9;
-        color: #0ec3c9;
+.btn-levels:hover {
+    background: rgba(167, 139, 250, 0.2);
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.2);
+}
+
+/* ─── LEVEL SELECT OVERLAY ─────────────────────────────────────── */
+.level-select-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
 
-    &:active {
-        background-color: #0ec3c9;
+    to {
+        opacity: 1;
+    }
+}
+
+.level-select-panel {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    min-width: 360px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
     }
 
-    /* Disabled styles */
-    &:disabled {
-        cursor: not-allowed;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: rgba(255, 255, 255, 0.3);
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.level-select-panel h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.level-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.level-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+.level-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.level-card:hover::before {
+    opacity: 1;
+}
+
+.level-card:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.15);
+    transform: translateX(4px);
+}
+
+.level-card.current {
+    border-color: var(--accent-cyan);
+    background: rgba(34, 211, 238, 0.06);
+}
+
+.level-card.completed {
+    border-color: var(--accent-green);
+}
+
+.level-card-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    min-width: 36px;
+}
+
+.level-card-name {
+    font-size: 1rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+.level-card-check {
+    font-size: 1.2rem;
+    color: var(--accent-green);
+}
+
+/* ─── MAIN CONTENT ─────────────────────────────────────────────── */
+.game-content {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ─── CANVAS ───────────────────────────────────────────────────── */
+.canvas-container {
+    flex: 1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canvas-container #game-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canvas-container #game-container canvas {
+    border-radius: var(--radius-md);
+}
+
+/* ─── PROGRAM PANEL ────────────────────────────────────────────── */
+.program-panel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+/* ─── STATUS BAR ───────────────────────────────────────────────── */
+.status-bar {
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    transition: all 0.3s ease;
+}
+
+.status-bar.status-info {
+    border-color: rgba(34, 211, 238, 0.2);
+    background: rgba(34, 211, 238, 0.05);
+}
+
+.status-bar.status-success {
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(52, 211, 153, 0.08);
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.1);
+}
+
+.status-bar.status-error {
+    border-color: rgba(248, 113, 113, 0.3);
+    background: rgba(248, 113, 113, 0.06);
+}
+
+.status-text {
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.status-success .status-text {
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.status-error .status-text {
+    color: var(--accent-red);
+}
+
+/* ─── COMMAND PALETTE ──────────────────────────────────────────── */
+.command-palette {
+    padding: 12px;
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.palette-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.palette-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cmd-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 6px;
+    min-width: 52px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+}
+
+.cmd-button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--cmd-color) 15%, transparent);
+    border-color: var(--cmd-color);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--cmd-color) 20%, transparent);
+    transform: translateY(-1px);
+}
+
+.cmd-button:active:not(:disabled) {
+    transform: translateY(0px) scale(0.97);
+}
+
+.cmd-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.cmd-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--cmd-color);
+}
+
+.cmd-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ─── QUEUE SECTIONS ───────────────────────────────────────────── */
+.queues-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+/* Scrollbar */
+.queues-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.queues-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.queues-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.queue-section {
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.queue-section:hover {
+    border-color: color-mix(in srgb, var(--queue-color) 40%, transparent);
+}
+
+.queue-section.active {
+    border-color: var(--queue-color);
+    background: color-mix(in srgb, var(--queue-color) 4%, var(--bg-secondary));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--queue-color) 10%, transparent);
+}
+
+.queue-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.queue-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--queue-color);
+}
+
+.queue-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.queue-clear {
+    font-size: 0.7rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    border-radius: 4px;
+    color: var(--accent-red);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.queue-clear:hover {
+    background: rgba(248, 113, 113, 0.2);
+    border-color: var(--accent-red);
+}
+
+/* ─── QUEUE SLOTS ──────────────────────────────────────────────── */
+.queue-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.queue-slot {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.queue-slot.empty {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.queue-slot.filled {
+    background: color-mix(in srgb, var(--cmd-color) 12%, var(--bg-tertiary));
+    border: 1px solid color-mix(in srgb, var(--cmd-color) 30%, transparent);
+    cursor: pointer;
+}
+
+.queue-slot.filled:hover {
+    border-color: var(--accent-red);
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.queue-slot.filled:hover .slot-icon {
+    color: var(--accent-red);
+}
+
+.queue-slot.highlighted {
+    animation: pulse-glow 0.6s ease infinite alternate;
+    border-color: var(--accent-yellow) !important;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.3);
+}
+
+@keyframes pulse-glow {
+    from {
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+    }
+
+    to {
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
+    }
+}
+
+.slot-icon {
+    font-size: 1rem;
+    color: var(--cmd-color);
+    line-height: 1;
+}
+
+.slot-placeholder {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+
+/* ─── CONTROL BUTTONS ──────────────────────────────────────────── */
+.control-buttons-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.speed-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+}
+
+.speed-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.speed-options {
+    display: flex;
+    gap: 4px;
+}
+
+.speed-btn {
+    padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.speed-btn:hover {
+    color: var(--text-primary);
+}
+
+.speed-btn.active {
+    background: rgba(34, 211, 238, 0.1);
+    border-color: rgba(34, 211, 238, 0.4);
+    color: var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.1);
+}
+
+.control-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-run,
+.btn-stop,
+.btn-reset {
+    flex: 1;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.btn-run {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-run:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-run:active:not(:disabled) {
+    transform: translateY(0px);
+}
+
+.btn-run:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-stop {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-stop:hover {
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-reset {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-reset:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+/* ─── RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .game-content {
+        flex-direction: column;
+    }
+
+    .program-panel {
+        width: 100%;
+        max-height: 45vh;
+    }
+
+    .canvas-container {
+        min-height: 300px;
     }
 }

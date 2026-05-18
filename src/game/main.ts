@@ -6,7 +6,7 @@ import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import * as Phaser from 'phaser';
 
-//  Find out more information about the Game Config at:
+//  Encuentra más información sobre la configuración del juego (Game Config) en:
 //  https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
@@ -16,7 +16,7 @@ const config: Phaser.Types.Core.GameConfig = {
     pixelArt: true,
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
+        autoCenter: Phaser.Scale.Center.CENTER_BOTH,
         max: {
             width: 768,
             height: 768,
