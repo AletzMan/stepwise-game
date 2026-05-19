@@ -12,7 +12,7 @@ export class Game extends Scene {
     shouldStop: boolean;
     robot: Phaser.GameObjects.Sprite;
     shadow: Phaser.GameObjects.Ellipse;
-    goalTiles: Record<string, Phaser.GameObjects.Image>;
+    goalTiles: Set<string>;
     activatedGoals: Set<string>;
     currentLevel: LevelData | null;
     mapObjects: Phaser.GameObjects.Image[];
@@ -25,7 +25,7 @@ export class Game extends Scene {
         this.direction = 0;
         this.isRunning = false;
         this.shouldStop = false;
-        this.goalTiles = {};
+        this.goalTiles = new Set();
         this.activatedGoals = new Set();
         this.currentLevel = null;
         this.mapObjects = [];
@@ -35,7 +35,7 @@ export class Game extends Scene {
 
     preload() {
         this.load.spritesheet('robot', 'assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
-        this.load.spritesheet('tiles', 'assets/tiles.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('tiles', 'assets/tiles.png', { frameWidth: 64, frameHeight: 96 });
     }
 
     create() {
@@ -91,7 +91,7 @@ export class Game extends Scene {
         // Limpiar el mapa existente
         this.mapObjects.forEach(obj => obj.destroy());
         this.mapObjects = [];
-        this.goalTiles = {};
+        this.goalTiles = new Set();
 
         // Destruir el robot existente si está presente
         if (this.robot) {
@@ -109,18 +109,22 @@ export class Game extends Scene {
         };
         this.direction = level.startDirection;
 
+        // Asignar los objetivos (ahora solo como Set)
+        this.goalTiles = new Set();
+
         // Crear el mapa
         this.createMap(level.map);
+
 
         // Crear el robot
         const startPos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
 
         this.shadow = this.add.ellipse(startPos.x, startPos.y, 24, 12, 0x000000, 0.25);
-        this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1);
+        this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1).setOrigin(0.55, -0.78);
 
-        this.robot = this.add.sprite(startPos.x, startPos.y, 'robot').setOrigin(0.55, 0.95);
+        this.robot = this.add.sprite(startPos.x, startPos.y, 'robot').setOrigin(0.55, 0.68);
         this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
-        this.robot.setScale(0.85);
+        this.robot.setScale(0.55);
 
         // Reproducir la animación de reposo (idle)
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
@@ -157,10 +161,13 @@ export class Game extends Scene {
         this.activatedGoals = new Set();
 
         // Restablecer los elementos visuales de las casillas objetivo
-        for (const key of Object.keys(this.goalTiles)) {
-            const tile = this.goalTiles[key];
-            tile.setAlpha(1);
-            tile.setTint(0xffffff);
+        for (const key of this.goalTiles) {
+            const [x, y] = key.split(',').map(Number);
+            const z = this.currentLevel!.map[y][x].h;
+            const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+            if (block) {
+                block.setFrame(TILE.BLUE);
+            }
         }
 
         EventBus.emit('execution-start');
@@ -170,8 +177,8 @@ export class Game extends Scene {
 
             if (!this.shouldStop) {
                 // Verificar si todos los objetivos están activados
-                const allGoals = this.currentLevel?.goals || [];
-                const allActivated = allGoals.every(g => this.activatedGoals.has(`${g.x},${g.y}`));
+                const totalGoals = this.goalTiles.size;
+                const allActivated = totalGoals > 0 && this.activatedGoals.size === totalGoals;
 
                 if (allActivated) {
                     EventBus.emit('level-complete', this.currentLevel?.id);
@@ -293,14 +300,20 @@ export class Game extends Scene {
         // Reproducir la animación de activación
         await this.animateMovement(this.robotPos.x, this.robotPos.y, this.robotPos.z, 'activate');
 
-        // Verificar si se encuentra sobre una casilla objetivo
-        if (this.goalTiles[key]) {
+        // Verificar si se encuentra sobre una casilla objetivo 
+        if (this.goalTiles.has(key)) {
             this.activatedGoals.add(key);
-            this.goalTiles[key].setTint(0x00ff88);
+
+            const [x, y] = key.split(',').map(Number);
+            const z = this.currentLevel!.map[y][x].h;
+            const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+            if (block) {
+                block.setFrame(TILE.YELLOW);
+            }
 
             // Verificar si el nivel está completado
-            const allGoals = this.currentLevel?.goals || [];
-            const allActivated = allGoals.every(g => this.activatedGoals.has(`${g.x},${g.y}`));
+            const totalGoals = this.goalTiles.size;
+            const allActivated = totalGoals > 0 && this.activatedGoals.size === totalGoals;
             if (allActivated) {
                 this.shouldStop = true;
                 EventBus.emit('level-complete', this.currentLevel?.id);
@@ -332,8 +345,13 @@ export class Game extends Scene {
         this.activatedGoals = new Set();
 
         // Restablecer los elementos visuales de las casillas objetivo
-        for (const key of Object.keys(this.goalTiles)) {
-            this.goalTiles[key].setTint(0xffffff);
+        for (const key of this.goalTiles) {
+            const [x, y] = key.split(',').map(Number);
+            const z = this.currentLevel!.map[y][x].h;
+            const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+            if (block) {
+                block.setFrame(TILE.BLUE);
+            }
         }
 
         // Restablecer el aspecto visual del robot
@@ -510,14 +528,16 @@ export class Game extends Scene {
 
                 for (let z = 0; z <= tileInfo.h; z++) {
                     const pos = this.cartToIso(x, y, z);
-                    const targetFrame = (z === tileInfo.h) ? tileInfo.t : TILE.GRAY;
+                    const isGoal = z === tileInfo.h && tileInfo.t === TILE.BLUE;
+                    let targetFrame = (z === tileInfo.h) ? tileInfo.t : TILE.GRAY;
 
                     const block = this.add.image(pos.x, pos.y, 'tiles', targetFrame);
+                    block.setName(`${x},${y},${z}`);
                     block.setDepth((x + y) * 100);
                     this.mapObjects.push(block);
 
-                    if (z === tileInfo.h && tileInfo.t === TILE.PURPLE) {
-                        this.goalTiles[`${x},${y}`] = block;
+                    if (isGoal) {
+                        this.goalTiles.add(`${x},${y}`);
                     }
                 }
             }

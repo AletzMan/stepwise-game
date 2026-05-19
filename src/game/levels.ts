@@ -14,8 +14,8 @@ export interface LevelData {
     map: TileInfo[][];
     startPos: { x: number; y: number };
     startDirection: number; // 0=SE, 1=SO, 2=NO, 3=NE
-    goals: { x: number; y: number }[]; // Casillas que deben ser activadas
     availableCommands: Command[];
+    goalCommands: number; // Numero de comandos necesarios para completar el nivel
     mainSlots: number;
     f1Slots: number;
     f2Slots: number;
@@ -27,7 +27,7 @@ export const TILE = {
     GRAY: 0, YELLOW: 1, RED: 2, PURPLE: 3, BLUE: 4,
     STONE_GRAY: 6, STONE_YELLOW: 7,
     GARDEN: 12, GARDEN_FENCE_WEST: 13, GARDEN_FENCE_SOUTH: 14, GARDEN_FENCE_EAST: 15, GARDEN_FENCE_NORTH: 16, GARDEN_FENCE_COMPLETE: 17,
-    GARDEN_FENCE_WEST_SOUTH: 18, GARDEN_FENCE_EAST_SOUTH: 19, GARDEN_FENCE_EAST_NORTH: 20, GARDEN_FENCE_WEST_NORTH: 21, GARDEN_FENCE_WEST_EAST: 22, GARDEN_FENCE_NORTH_SOUTH: 23,
+    CASCADE_1: 18, CASCADE_2: 19, CASCADE_3: 20, CASCADE_4: 21, CASCADE_5: 22, CASCADE_6: 23,
     WOOD: 24,
 };
 
@@ -35,8 +35,8 @@ export const TILE = {
 export const BLOCKED_TILES = [
     TILE.GARDEN, TILE.GARDEN_FENCE_COMPLETE,
     TILE.GARDEN_FENCE_WEST, TILE.GARDEN_FENCE_SOUTH, TILE.GARDEN_FENCE_EAST, TILE.GARDEN_FENCE_NORTH,
-    TILE.GARDEN_FENCE_WEST_SOUTH, TILE.GARDEN_FENCE_WEST_EAST, TILE.GARDEN_FENCE_WEST_NORTH,
-    TILE.GARDEN_FENCE_EAST_SOUTH, TILE.GARDEN_FENCE_EAST_NORTH, TILE.GARDEN_FENCE_NORTH_SOUTH,
+    TILE.CASCADE_1, TILE.CASCADE_2, TILE.CASCADE_3, TILE.CASCADE_4, TILE.CASCADE_5, TILE.CASCADE_6,
+    TILE.WOOD,
 ];
 
 const T = TILE;
@@ -47,22 +47,12 @@ const LEVEL_1: LevelData = {
     name: 'First Steps',
     description: 'Walk forward and activate the goal tiles. Simple!',
     map: [
-        [{ h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.BLUE }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.GARDEN_FENCE_EAST_NORTH }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.GARDEN_FENCE_NORTH }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.GARDEN_FENCE_NORTH }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
-        [{ h: 0, t: T.GARDEN_FENCE_WEST_NORTH }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }, { h: 0, t: T.STONE_GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.BLUE },],
     ],
-    startPos: { x: 1, y: 1 },
+    startPos: { x: 0, y: 0 },
     startDirection: 0, // SO (Sureste / SE en la brújula)
-    goals: [
-        { x: 4, y: 1 },
-        { x: 4, y: 3 },
-        { x: 4, y: 5 },
-    ],
     availableCommands: ['WALK', 'TURN_LEFT', 'TURN_RIGHT', 'ACTIVATE'],
+    goalCommands: 4,
     mainSlots: 12,
     f1Slots: 0,
     f2Slots: 0,
@@ -76,19 +66,17 @@ const LEVEL_2: LevelData = {
     description: 'Use JUMP to reach higher ground. Use F1 to save steps!',
     map: [
         [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
-        [{ h: 0, t: T.GRAY }, { h: 0, t: T.BLUE }, { h: 0, t: T.BLUE }, { h: 1, t: T.YELLOW }, { h: 1, t: T.PURPLE }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
-        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 1, t: T.YELLOW }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
-        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 2, t: T.PURPLE }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
-        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 2, t: T.YELLOW }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
-        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 3, t: T.PURPLE }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 1, t: T.GRAY }, { h: 1, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 1, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 2, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 2, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
+        [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 3, t: T.BLUE }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
         [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }],
     ],
     startPos: { x: 1, y: 1 },
     startDirection: 0, // SO (Sureste / SE en la brújula)
-    goals: [
-        { x: 4, y: 5 },
-    ],
     availableCommands: ['WALK', 'JUMP', 'TURN_LEFT', 'TURN_RIGHT', 'ACTIVATE', 'F1'],
+    goalCommands: 8,
     mainSlots: 12,
     f1Slots: 8,
     f2Slots: 0,
