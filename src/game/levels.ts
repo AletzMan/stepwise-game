@@ -76,7 +76,7 @@ const LEVEL_2: LevelData = {
     startPos: { x: 1, y: 1 },
     startDirection: 0, // SO (Sureste / SE en la brújula)
     availableCommands: ['WALK', 'JUMP', 'TURN_LEFT', 'TURN_RIGHT', 'ACTIVATE', 'F1'],
-    goalCommands: 8,
+    goalCommands: 9,
     mainSlots: 12,
     f1Slots: 8,
     f2Slots: 0,
