@@ -1,40 +1,34 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { IRefPhaserGame, PhaserGame } from './PhaserGame';
 import { EventBus } from './game/EventBus';
-import { Command, LEVELS } from './game/levels';
+import { Command, LEVELS, LevelData } from './game/levels';
+import Header from './components/layout/Header';
+import LevelSelectModal from './components/layout/LevelSelectModal';
+import LevelCompleteModal from './components/layout/LevelCompleteModal';
 import '@fontsource/titan-one';
-import Button from './components/Button';
-import CommandButton from './components/CommandButton';
-import { ChevronRight, Menu, RotateCcw, Play, BrushCleaning, Square } from 'lucide-react';
+import Button from './components/ui/Button';
+import CommandButton from './components/ui/CommandButton';
+import { Play, BrushCleaning, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe, FunctionSquare } from 'lucide-react';
 
 // Configuración de visualización de comandos
-const COMMAND_CONFIG: Record<Command, { label: string; icon: string; color: string }> = {
-    WALK: { label: 'Walk', icon: '⬆', color: '#22d3ee' },
-    JUMP: { label: 'Jump', icon: '⤴', color: '#a78bfa' },
-    TURN_LEFT: { label: 'Left', icon: '↺', color: '#fbbf24' },
-    TURN_RIGHT: { label: 'Right', icon: '↻', color: '#fb923c' },
-    ACTIVATE: { label: 'Act', icon: '⚡', color: '#34d399' },
-    F1: { label: 'F1', icon: 'ƒ1', color: '#f472b6' },
-    F2: { label: 'F2', icon: 'ƒ2', color: '#c084fc' },
-    F3: { label: 'F3', icon: 'ƒ3', color: '#67e8f9' },
+const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
+    WALK: { label: 'Walk', icon: <ArrowRight size={16} />, color: '#22d3ee' },
+    JUMP: { label: 'Jump', icon: <ArrowUp size={16} />, color: '#a78bfa' },
+    TURN_LEFT: { label: 'Left', icon: <CornerUpLeft size={16} />, color: '#fbbf24' },
+    TURN_RIGHT: { label: 'Right', icon: <CornerUpRight size={16} />, color: '#fb923c' },
+    ACTIVATE: { label: 'Act', icon: <Pickaxe size={16} />, color: '#34d399' },
+    F1: { label: 'F1', icon: <span className='font-jetbrains text-xs'>ƒ1</span>, color: '#f472b6' },
+    F2: { label: 'F2', icon: <span className='font-jetbrains text-xs'>ƒ2</span>, color: '#c084fc' },
+    F3: { label: 'F3', icon: <span className='font-jetbrains text-xs'>ƒ3</span>, color: '#67e8f9' },
 };
 
-interface LevelInfo {
-    id: number;
-    name: string;
-    description: string;
-    availableCommands: Command[];
-    mainSlots: number;
-    f1Slots: number;
-    f2Slots: number;
-    f3Slots: number;
-}
+
 
 type ProgramSlot = 'main' | 'f1' | 'f2' | 'f3';
 
 function App() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
-    const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
+    const [levelInfo, setLevelInfo] = useState<LevelData | null>(null);
     const [mainQueue, setMainQueue] = useState<Command[]>([]);
     const [f1Queue, setF1Queue] = useState<Command[]>([]);
     const [f2Queue, setF2Queue] = useState<Command[]>([]);
@@ -54,7 +48,7 @@ function App() {
 
     // Escuchar eventos desde Phaser
     useEffect(() => {
-        const onLevelLoaded = (info: LevelInfo) => {
+        const onLevelLoaded = (info: LevelData) => {
             setLevelInfo(info);
             setMainQueue([]);
             setF1Queue([]);
@@ -294,199 +288,33 @@ function App() {
         <div id="app" className="w-full h-screen flex justify-center items-center">
             <div className="flex flex-col w-full max-w-[1280px] h-screen p-2 gap-2">
                 {/* Encabezado */}
-                <header className="flex items-center justify-between py-2 px-5 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-md shadow-[0_0_20px_rgba(34,211,238,0.1)] min-h-[56px]">
-                    <div className="header-left">
-                        <h1 className="font-jetbrains text-[1.3rem] font-extrabold tracking-[4px] bg-linear-to-br from-accent-cyan to-accent-purple bg-clip-text text-transparent">STEPWISE</h1>
-                    </div>
-                    <div className="flex items-center justify-center">
-                        {levelInfo && (
-                            <div className="flex items-center gap-2.5 py-1 px-4 bg-accent-cyan/8 border border-accent-cyan/20 rounded-[20px]">
-                                <span className="font-jetbrains text-[0.75rem] font-semibold text-accent-cyan uppercase tracking-[1px]">Level {levelInfo.id}</span>
-                                <span className="text-[0.9rem] font-medium text-text-primary">{levelInfo.name}</span>
-                            </div>
-                        )}
-                    </div>
-                    <div className="header-right">
-                        <Button
-                            intent="accent"
-                            color="purple"
-                            size="sm"
-                            onClick={() => setShowLevelSelect(!showLevelSelect)}
-                        >
-                            ☰ Levels
-                        </Button>
-                    </div>
-                </header>
+                <Header
+                    levelInfo={levelInfo}
+                    showLevelSelect={showLevelSelect}
+                    setShowLevelSelect={setShowLevelSelect}
+                />
 
                 {/* Superposición de selección de nivel */}
                 {showLevelSelect && (
-                    <div className="fixed inset-0 z-1000 bg-black/70 backdrop-blur-sm flex items-center justify-center animate-fade-in" onClick={() => setShowLevelSelect(false)}>
-                        <div className="bg-linear-to-br from-bg-secondary to-bg-primary border border-border-custom rounded-md p-8 min-w-[360px] shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_20px_rgba(34,211,238,0.1)] animate-slide-up" onClick={(e) => e.stopPropagation()}>
-                            <h2 className="font-jetbrains text-[1.1rem] font-semibold text-text-secondary uppercase tracking-[3px] mb-6 text-center">Select Level</h2>
-                            <div className="flex flex-col gap-3">
-                                {LEVELS.map(level => (
-                                    <Button
-                                        key={level.id}
-                                        intent="default"
-                                        isActive={levelInfo?.id === level.id}
-                                        className={`justify-start p-4 border-2 ${completedLevels.has(level.id) ? 'border-accent-green/50' : ''}`}
-                                        onClick={() => handleLoadLevel(level.id)}
-                                    >
-                                        <span className="font-jetbrains text-[1.5rem] font-bold text-accent-cyan min-w-[36px]">{level.id}</span>
-                                        <span className="text-[1rem] font-medium flex-1 text-left">{level.name}</span>
-                                        {completedLevels.has(level.id) && <span className="text-[1.2rem] text-accent-green">✓</span>}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    <LevelSelectModal
+                        levelInfo={levelInfo}
+                        completedLevels={completedLevels}
+                        setShowLevelSelect={setShowLevelSelect}
+                        handleLoadLevel={handleLoadLevel}
+                    />
                 )}
 
                 {/* Superposición de estado del nivel */}
                 {showStatusLevel && (
-                    <dialog
-                        className="fixed inset-0 w-svw h-svh z-2000 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in cursor-pointer"
-                        open
-                        onClick={() => setShowStatusLevel(false)}
-                    >
-                        {statusType === 'success' && (
-                            <div
-                                className="
-                                relative
-                                overflow-hidden
-                                w-[420px]
-                                rounded-md
-                                border border-cyan-400/20
-                                bg-linear-to-b from-slate-800 to-slate-900
-                                shadow-[0_20px_80px_rgba(0,0,0,0.7),0_0_40px_rgba(34,211,238,0.15)]
-                                animate-slide-up
-                            "
-                                onClick={(e) => e.stopPropagation()}
-                            >
-
-                                {/* Glow top */}
-                                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-cyan-400 via-green-400 to-cyan-400" />
-
-                                {/* Decorative glow */}
-                                <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-60 h-60 bg-green-400/10 blur-3xl rounded-full" />
-
-                                <div className="relative px-8 pt-10 pb-6 text-center">
-
-                                    {/* Title */}
-                                    <div className="mb-2">
-                                        <p className="text-green-400 text-sm tracking-[0.3em] uppercase font-bold">
-                                            Mission Complete
-                                        </p>
-
-                                        <h2 className="font-['Titan_One'] text-4xl text-white mt-2">
-                                            Level {levelInfo?.id}
-                                        </h2>
-                                    </div>
-
-                                    {/* Stars */}
-                                    <div className="relative flex justify-center my-8">
-
-                                        {/* Placeholder stars */}
-                                        <div className="flex gap-4 text-5xl">
-                                            {Array.from({ length: 3 }).map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className={`scale-90 opacity-30 grayscale brightness-50 ${i !== 1 ? 'pt-2' : ''}`}>
-                                                    ⭐
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Animated earned stars */}
-                                        <div className="absolute inset-0 flex justify-center gap-4 text-5xl">
-                                            {Array.from({ length: 3 }).map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="star-animate"
-                                                    style={{
-                                                        opacity: i < stars ? 1 : 0
-                                                    }}
-                                                >
-                                                    ⭐
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                    </div>
-
-                                    {/* Description */}
-                                    <p className="text-slate-300 text-lg">
-                                        Puzzle solved successfully
-                                    </p>
-
-                                    {/* Stats */}
-                                    <div className="grid grid-cols-3 gap-3 mt-8">
-
-                                        <div className="bg-slate-800/80 border border-slate-700 rounded-md py-3">
-                                            <p className="text-xs text-slate-400 uppercase">Moves</p>
-                                            <p className="text-xl font-bold text-white">{executedCommands.current}</p>
-                                        </div>
-
-                                        <div className="bg-slate-800/80 border border-slate-700 rounded-md py-3">
-                                            <p className="text-xs text-slate-400 uppercase">Time</p>
-                                            <p className="text-xl font-bold text-white">01:20</p>
-                                        </div>
-
-                                        <div className="bg-slate-800/80 border border-slate-700 rounded-md py-3">
-                                            <p className="text-xs text-slate-400 uppercase">XP</p>
-                                            <p className="text-xl font-bold text-cyan-400">+250</p>
-                                        </div>
-
-                                    </div>
-
-                                    {/* Buttons */}
-                                    <div className="mt-8 flex flex-col gap-3">
-
-                                        {/* Main CTA */}
-                                        <Button
-                                            intent="solid"
-                                            color="green"
-                                            className="h-14 rounded-md text-lg font-bold tracking-wide shadow-[0_0_20px_rgba(34,197,94,0.35)]
-                    "
-                                            onClick={() => {
-                                                handleLoadLevel(levelInfo!.id + 1);
-                                            }}
-                                        >
-                                            <span className="text-green-900">Next Level </span><ChevronRight className='text-green-900' size={24} strokeWidth={3} />
-                                        </Button>
-
-                                        {/* Secondary actions */}
-                                        <div className="flex gap-3">
-
-                                            <Button
-                                                intent="solid"
-                                                color="pink"
-                                                className="flex-1 h-12 rounded-md"
-                                                onClick={() => {
-                                                    setStatusType('info');
-                                                    setShowStatusLevel(false);
-                                                }}
-                                            >
-                                                <Menu className='text-pink-900' size={24} strokeWidth={3} />
-                                            </Button>
-
-                                            <Button
-                                                intent="solid"
-                                                color="orange"
-                                                className="flex-1 h-12 rounded-md"
-                                                onClick={() => {
-                                                    handleLoadLevel(levelInfo!.id);
-                                                }}
-                                            >
-                                                <RotateCcw className='text-orange-900  ' size={24} strokeWidth={3} />
-                                            </Button>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </dialog>
+                    <LevelCompleteModal
+                        levelInfo={levelInfo}
+                        statusType={statusType}
+                        stars={stars}
+                        executedCommands={executedCommands}
+                        setShowStatusLevel={setShowStatusLevel}
+                        setStatusType={setStatusType}
+                        handleLoadLevel={handleLoadLevel}
+                    />
                 )}
 
                 {/* Contenido principal */}
@@ -517,7 +345,7 @@ function App() {
                                             onClick={() => addCommand(cmd)}
                                             disabled={isRunning}
                                         >
-                                            <span className="text-[1.2rem] leading-none text-[--cmd-color]">{config.icon}</span>
+                                            <span className="text-[1.2rem] leading-none text-(--cmd-color)">{config.icon}</span>
                                             <span className="text-[0.6rem] font-medium text-text-muted uppercase tracking-[0.5px] mt-1">{config.label}</span>
                                         </CommandButton>
                                     );
