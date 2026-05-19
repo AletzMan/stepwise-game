@@ -44,6 +44,9 @@ function App() {
     const [speed, setSpeed] = useState<number>(0.5);
     const [statusMessage, setStatusMessage] = useState<string>('');
     const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>('info');
+    const [showStatusLevel, setShowStatusLevel] = useState(false);
+    const [stars, setStars] = useState<number>(0); // Numero de estrellas ganadas en el nivel actual 
+    const executedCommands = useRef<number>(0); // Numero total de comandos ejecutados en el nivel actual
 
     // Escuchar eventos desde Phaser
     useEffect(() => {
@@ -63,9 +66,11 @@ function App() {
             setIsRunning(true);
             setStatusMessage('Running program...');
             setStatusType('info');
+            executedCommands.current = 0;
         };
 
         const onExecutionStep = (data: { command: Command; index: number; depth: number }) => {
+            executedCommands.current++;
             setCurrentStep(data.index);
             setCurrentDepth(data.depth);
         };
@@ -74,6 +79,10 @@ function App() {
             setCompletedLevels(prev => new Set([...prev, levelId]));
             setStatusMessage('🎉 Level Complete!');
             setStatusType('success');
+            setTimeout(() => {
+                setShowStatusLevel(true);
+                setStars(calculateStars(levelId, executedCommands.current));
+            }, 750);
             setIsRunning(false);
         };
 
@@ -82,6 +91,9 @@ function App() {
                 setStatusMessage('Program finished — not all goals activated');
                 setStatusType('error');
             }
+            setTimeout(() => {
+                setShowStatusLevel(true);
+            }, 750);
             setIsRunning(false);
         };
 
@@ -163,6 +175,19 @@ function App() {
         setQueue(slot, queue);
     };
 
+    const calculateStars = (levelId: number, commands: number): number => {
+        const level = LEVELS.find(l => l.id === levelId);
+        if (!level) return 0;
+
+        const excess = commands - level.goalCommands;
+        if (excess <= 0) return 3;
+
+        const pct = excess / level.goalCommands;
+        if (pct <= 0.5) return 2;
+
+        return 1;
+    };
+
     const clearQueue = (slot: ProgramSlot) => {
         if (isRunning) return;
         setQueue(slot, []);
@@ -189,6 +214,7 @@ function App() {
         setCurrentStep(-1);
         setStatusMessage(levelInfo?.description || '');
         setStatusType('info');
+        setShowStatusLevel(false);
     };
 
     const handleLoadLevel = (levelId: number) => {
@@ -310,6 +336,43 @@ function App() {
                     </div>
                 )}
 
+                {/* Superposición de estado del nivel */}
+                {showStatusLevel && (
+                    <dialog className="status-overlay" open onClick={() => setShowStatusLevel(false)}>
+                        {statusType === 'success' && <div className="status-panel" onClick={(e) => e.stopPropagation()}>
+                            <h2 className="status-title">Level complete!</h2>
+                            <p className="status-message">You solved Level {levelInfo?.id}!</p>
+                            <div className="stars">
+                                {Array.from({ length: stars }).map((_, i) => (
+                                    <div key={i} className="star">⭐</div>
+                                ))}
+                            </div>
+                            <button className="status-button" onClick={() => { handleLoadLevel(levelInfo!.id + 1); }}>
+                                Next
+                            </button>
+                            <button className="status-button" onClick={() => { setStatusType('info'); setShowStatusLevel(false); }}>
+                                Menu
+                            </button>
+                        </div>}
+                        {statusType === 'error' && <div className="status-panel" onClick={(e) => e.stopPropagation()}>
+                            <h2 className="status-title">Oops!</h2>
+                            <p className="status-message">You didn't solve Level {levelInfo?.id}!</p>
+                            <button className="status-button" onClick={() => { setStatusType('info'); setShowStatusLevel(false); }}>
+                                Try again
+                            </button>
+                        </div>}
+                        {statusType === 'info' && <div className="status-panel" onClick={(e) => e.stopPropagation()}>
+                            <h2 className="status-title">{levelInfo?.name}</h2>
+                            <p className="status-message">{levelInfo?.description}</p>
+                            <button className="status-button" onClick={() => { setStatusType('info'); setShowStatusLevel(false); }}>
+                                Start
+                            </button>
+                        </div>}
+                    </dialog>
+                )}
+
+
+
                 {/* Contenido principal */}
                 <div className="game-content">
                     {/* Lienzo de Phaser (Canvas) */}
@@ -360,8 +423,8 @@ function App() {
                                 <span className="speed-label">Speed</span>
                                 <div className="speed-options">
                                     {[0.5, 1, 2].map(s => (
-                                        <button 
-                                            key={s} 
+                                        <button
+                                            key={s}
                                             className={`speed-btn ${speed === s ? 'active' : ''}`}
                                             onClick={() => setSpeed(s)}
                                         >
