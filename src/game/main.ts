@@ -24,7 +24,7 @@ const config: Phaser.Types.Core.GameConfig = {
         width: 768,
         height: 768,
     },
-    backgroundColor: '#051d30',
+    backgroundColor: '#121820',
     scene: [
         Boot,
         Preloader,

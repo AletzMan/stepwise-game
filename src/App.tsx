@@ -8,7 +8,9 @@ import LevelCompleteModal from './components/layout/LevelCompleteModal';
 import '@fontsource/titan-one';
 import Button from './components/ui/Button';
 import CommandButton from './components/ui/CommandButton';
-import { Play, BrushCleaning, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe } from 'lucide-react';
+import { Play, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe, Box, EraserIcon } from 'lucide-react';
+import LevelErrorModal from './components/layout/LevelErrorModel';
+import { useTranslation } from 'react-i18next';
 
 // Configuración de visualización de comandos
 const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
@@ -16,10 +18,10 @@ const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; co
     JUMP: { label: 'Jump', icon: <ArrowUp size={16} strokeWidth={3} />, color: '#a78bfa' },
     TURN_LEFT: { label: 'Left', icon: <CornerUpLeft size={16} strokeWidth={3} />, color: '#fbbf24' },
     TURN_RIGHT: { label: 'Right', icon: <CornerUpRight size={16} strokeWidth={3} />, color: '#fb923c' },
-    ACTIVATE: { label: 'Pick', icon: <Pickaxe size={16} strokeWidth={1} fill='currentColor' />, color: '#34d399' },
-    F1: { label: 'F1', icon: <span className='font-jetbrains text-xs'>ƒ1</span>, color: '#f472b6' },
-    F2: { label: 'F2', icon: <span className='font-jetbrains text-xs'>ƒ2</span>, color: '#c084fc' },
-    F3: { label: 'F3', icon: <span className='font-jetbrains text-xs'>ƒ3</span>, color: '#67e8f9' },
+    ACTIVATE: { label: 'Pick', icon: <Pickaxe size={16} strokeWidth={0} fill='currentColor' />, color: '#34d399' },
+    F1: { label: 'F1', icon: <Box size={16} strokeWidth={3} />, color: '#f472b6' },
+    F2: { label: 'F2', icon: <Box size={16} strokeWidth={3} />, color: '#c084fc' },
+    F3: { label: 'F3', icon: <Box size={16} strokeWidth={3} />, color: '#67e8f9' },
 };
 
 
@@ -27,6 +29,7 @@ const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; co
 type ProgramSlot = 'main' | 'f1' | 'f2' | 'f3';
 
 function App() {
+    const { t } = useTranslation();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [levelInfo, setLevelInfo] = useState<LevelData | null>(null);
     const [mainQueue, setMainQueue] = useState<Command[]>([]);
@@ -38,12 +41,30 @@ function App() {
     const [executionStack, setExecutionStack] = useState<{ slot: ProgramSlot; index: number }[]>([]);
     const [showLevelSelect, setShowLevelSelect] = useState(false);
     const [completedLevels, setCompletedLevels] = useState<Set<number>>(new Set());
-    const [speed, setSpeed] = useState<number>(0.5);
+    const [speed, setSpeed] = useState<number>(1);
     const [statusMessage, setStatusMessage] = useState<string>('');
     const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>('info');
     const [showStatusLevel, setShowStatusLevel] = useState(false);
+    const [showErrorLevel, setShowErrorLevel] = useState(false);
     const [stars, setStars] = useState<number>(0); // Numero de estrellas ganadas en el nivel actual 
     const executedCommands = useRef<number>(0); // Numero total de comandos ejecutados en el nivel actual
+
+    const getStatusText = useCallback((status: string) => {
+        if (status === 'incomplete') {
+            return t('app.program_finished_incomplete');
+        }
+        if (status.startsWith('error:')) {
+            const err = status.substring(6);
+            return t('app.error_prefix', { message: t(`errors.${err}`, { defaultValue: err }) });
+        }
+        if (status === 'running') {
+            return t('app.running_program');
+        }
+        if (status === 'description' && levelInfo) {
+            return t(`levels.${levelInfo.id}.description`, { defaultValue: levelInfo.description });
+        }
+        return status;
+    }, [t, levelInfo]);
 
     // Escuchar eventos desde Phaser
     useEffect(() => {
@@ -55,13 +76,13 @@ function App() {
             setF3Queue([]);
             setIsRunning(false);
             setExecutionStack([]);
-            setStatusMessage(info.description);
+            setStatusMessage('description');
             setStatusType('info');
         };
 
         const onExecutionStart = () => {
             setIsRunning(true);
-            setStatusMessage('Running program...');
+            setStatusMessage('running');
             setStatusType('info');
             executedCommands.current = 0;
             setExecutionStack([]);
@@ -88,18 +109,24 @@ function App() {
 
         const onExecutionComplete = (data: { success: boolean; message: string }) => {
             if (!data.success) {
-                setStatusMessage('Program finished — not all goals activated');
+                setStatusMessage('incomplete');
                 setStatusType('error');
+                setTimeout(() => {
+                    setShowErrorLevel(true);
+                }, 500);
             }
             setIsRunning(false);
             setExecutionStack([]);
         };
 
         const onExecutionFail = (message: string) => {
-            setStatusMessage(`Error: ${message}`);
+            setStatusMessage(`error:${message}`);
             setStatusType('error');
             setIsRunning(false);
             setExecutionStack([]);
+            setTimeout(() => {
+                setShowErrorLevel(true);
+            }, 500);
         };
 
         const onExecutionEnd = () => {
@@ -212,15 +239,17 @@ function App() {
         EventBus.emit('reset-level');
         setIsRunning(false);
         setExecutionStack([]);
-        setStatusMessage(levelInfo?.description || '');
+        setStatusMessage('description');
         setStatusType('info');
         setShowStatusLevel(false);
+        setShowErrorLevel(false);
     };
 
     const handleLoadLevel = (levelId: number) => {
         EventBus.emit('load-level', levelId);
         setShowLevelSelect(false);
         setShowStatusLevel(false);
+        setShowErrorLevel(false);
     };
 
     const currentScene = (_scene: Phaser.Scene) => {
@@ -251,35 +280,74 @@ function App() {
 
         return (
             <div
-                className={`p-2.5 bg-bg-secondary border border-border-custom rounded-sm cursor-pointer queue-sec-hover ${isActive ? 'active' : ''}`}
+                className={`p-3 bg-bg-secondary/60 border rounded-sm cursor-pointer transition-all duration-300 select-none queue-sec-hover
+                ${isActive
+                        ? 'border-(--queue-color)/40 bg-linear-to-b from-bg-secondary to-bg-tertiary/80 shadow-[0_4px_20px_-5px_color-mix(in_srgb,var(--queue-color)_15%,transparent)]'
+                        : 'border-border-custom/50 hover:border-border-custom'
+                    } ${isActive ? 'active' : ''}`}
                 onClick={() => !isRunning && setActiveSlot(slot)}
                 style={{ '--queue-color': color } as React.CSSProperties}
             >
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="font-jetbrains text-[0.7rem] font-bold uppercase tracking-[2px] text-(--queue-color)">{label}</span>
-                    <span className="font-jetbrains text-[0.6rem] text-text-muted ml-auto">{queue.length}/{maxSlots}</span>
+                {/* Header de la Secuencia */}
+                <div className="flex items-center gap-2 mb-2.5">
+                    {/* Indicador de Activación visual */}
+                    <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${isActive ? 'bg-(--queue-color) shadow-[0_0_8px_var(--queue-color)]' : 'bg-text-muted/30'}`} />
+
+                    <span className="font-jetbrains text-[0.7rem] font-black uppercase tracking-[0.15em] text-(--queue-color)">
+                        {label}
+                    </span>
+
+                    <span className="font-jetbrains text-[0.65rem] font-bold text-text-secondary/80 bg-bg-tertiary/60 px-1.5 py-0.5 rounded-md border border-border-custom/30 ml-auto">
+                        {queue.length}<span className="text-text-muted/50 mx-0.5">/</span>{maxSlots}
+                    </span>
+
                     {!isRunning && queue.length > 0 && (
-                        <Button intent="ghost" color="red" size="none" className="w-5 h-5 rounded-[4px] text-[10px]" onClick={(e) => { e.stopPropagation(); clearQueue(slot); }}>✕</Button>
+                        <Button
+                            intent="ghost"
+                            color="red"
+                            size="none"
+                            className="w-5 h-5 rounded-md text-[10px] hover:bg-accent-red/20 hover:text-accent-red transition-colors flex items-center justify-center font-black"
+                            onClick={(e) => { e.stopPropagation(); clearQueue(slot); }}
+                        >
+                            ✕
+                        </Button>
                     )}
                 </div>
-                <div className="flex flex-wrap gap-1">
+
+                {/* Grilla de Slots */}
+                <div className="flex flex-wrap gap-1.5 p-1 bg-black/15 border border-black/10 rounded-md">
                     {Array.from({ length: maxSlots }).map((_, i) => {
                         const cmd = queue[i];
                         const isHighlighted = isRunning && executionStack.some(frame => frame.slot === slot && frame.index === i);
+
                         return (
                             <div
                                 key={i}
-                                className={`w-9 h-9 flex items-center justify-center rounded-sm transition-all duration-150 relative ${cmd ? 'queue-slot-filled' : 'bg-white/2 border border-dashed border-white/8'} ${isHighlighted ? 'animate-pulse-glow border-white! shadow-[0_0_12px_rgba(255,255,255,0.3)]' : isRunning && 'grayscale-100 opacity-65'}`}
+                                className={`w-9 h-9 flex items-center justify-center rounded-sm transition-all duration-200 relative cursor-pointer
+                                ${cmd
+                                        ? 'bg-(--cmd-color)/5 border border-b-[3px] border-(--cmd-color)/20 cmd-btn-hover active:translate-y-px active:border-b'
+                                        : 'bg-black/20 border border-dashed border-border-custom/30 hover:border-border-custom/60'
+                                    } 
+                                ${isHighlighted
+                                        ? 'animate-pulse-glow border-(--cmd-color)! bg-linear-to-t from-(--cmd-color)/15 to-transparent scale-105 z-10 shadow-[0_0_15px_color-mix(in_srgb,var(--cmd-color)_40%,transparent)]'
+                                        : isRunning && 'grayscale opacity-40 scale-95'
+                                    }`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (cmd && !isRunning) removeCommand(slot, i);
                                 }}
                                 style={cmd ? { '--cmd-color': COMMAND_CONFIG[cmd].color } as React.CSSProperties : {}}
                             >
+                                {/* Reflejo cristalino sutil si el slot tiene un comando */}
+                                {cmd && (
+                                    <div className="absolute inset-x-0 top-0 h-[35%] bg-white/5 rounded-t-sm pointer-events-none" />
+                                )}
+
                                 {cmd ? (
-                                    <span className="slot-icon text-[1rem] text-(--cmd-color) leading-none">{COMMAND_CONFIG[cmd].icon}</span>
+                                    <span className="slot-icon text-lg text-(--cmd-color) leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110">
+                                        {COMMAND_CONFIG[cmd].icon} </span>
                                 ) : (
-                                    <span className="text-[0.8rem] text-text-muted opacity-30">+</span>
+                                    <span className="text-[0.75rem] font-bold text-text-muted/20 select-none transition-colors group-hover:text-text-muted/40">+</span>
                                 )}
                             </div>
                         );
@@ -288,7 +356,6 @@ function App() {
             </div>
         );
     };
-
     return (
         <div id="app" className="w-full h-screen flex justify-center items-center">
             <div className="flex flex-col w-full max-w-[1280px] h-screen p-2 gap-2">
@@ -322,36 +389,51 @@ function App() {
                     />
                 )}
 
+                {/* Superposición en caso de error*/}
+                {showErrorLevel && (
+                    <LevelErrorModal
+                        message={getStatusText(statusMessage)}
+                        show={showErrorLevel}
+                        setShowStatusLevel={setShowStatusLevel}
+                        handleRetryLevel={() => handleLoadLevel(levelInfo?.id || 0)}
+                        onGoToMenu={() => handleLoadLevel(0)}
+                    />
+                )}
+
                 {/* Contenido principal */}
                 <div className="flex flex-col min-[901px]:flex-row gap-2 flex-1 min-h-0">
                     {/* Lienzo de Phaser (Canvas) */}
-                    <div className="flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary shadow-[0_0_20px_rgba(34,211,238,0.1)] flex items-center justify-center max-[900px]:min-h-[300px]">
+                    <div className="flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary flex items-center justify-center max-[900px]:min-h-[300px]">
                         <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
                     </div>
 
                     {/* Panel de programación */}
-                    <div className="w-[320px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
+                    <div className="w-[324px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
                         {/* Barra de estado */}
-                        <div className={`py-2.5 px-4 rounded-sm border transition-all duration-300 ${statusType === 'info' ? 'border-accent-cyan/20 bg-accent-cyan/5' : statusType === 'success' ? 'border-accent-green/40 bg-accent-green/8 shadow-[0_0_20px_rgba(52,211,153,0.1)]' : 'border-accent-red/30 bg-accent-red/6'}`}>
+                        {/*<div className={`py-2.5 px-4 rounded-sm border transition-all duration-300 ${statusType === 'info' ? 'border-accent-cyan/20 bg-accent-cyan/5' : statusType === 'success' ? 'border-accent-green/40 bg-accent-green/8 shadow-[0_0_20px_rgba(52,211,153,0.1)]' : 'border-accent-red/30 bg-accent-red/6'}`}>
                             <span className={`text-[0.8rem] font-normal leading-[1.4] ${statusType === 'info' ? 'text-text-secondary' : statusType === 'success' ? 'text-accent-green font-semibold' : 'text-accent-red'}`}>{statusMessage}</span>
-                        </div>
+                        </div>*/}
 
                         {/* Paleta de comandos */}
                         <div className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
-                            <div className="font-jetbrains text-[0.65rem] font-semibold uppercase tracking-[2px] text-text-muted mb-2.5">Commands</div>
+                            <div className="font-jetbrains text-[0.65rem] font-semibold uppercase tracking-[2px] text-text-muted mb-2.5">
+                                {t('app.commands_title')}
+                            </div>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {getAvailableCommandsForSlot(activeSlot).map(cmd => {
                                     const config = COMMAND_CONFIG[cmd];
                                     return (
                                         <CommandButton
                                             key={cmd}
-                                            className="w-full min-h-9.5"
-                                            style={{ '--cmd-color': config.color, borderColor: ` ${config.color}50` } as React.CSSProperties}
+                                            className="w-full"
+                                            style={{ '--cmd-color': config.color } as React.CSSProperties}
                                             onClick={() => addCommand(cmd)}
                                             disabled={isRunning}
                                         >
                                             <span className="text-[1.2rem] leading-none text-(--cmd-color) font-bold">{config.icon}</span>
-                                            <span className="text-[0.6rem] font-semibold text-(--cmd-color) uppercase tracking-[0.5px]">{config.label}</span>
+                                            <span className="text-[0.6rem] font-semibold text-(--cmd-color) uppercase tracking-[0.5px]">
+                                                {t(`commands.${cmd}`, { defaultValue: config.label })}
+                                            </span>
                                         </CommandButton>
                                     );
                                 })}
@@ -360,56 +442,68 @@ function App() {
 
                         {/* Colas de instrucciones */}
                         <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto min-h-0 queues-scrollbar">
-                            {renderQueue('main', 'MAIN', '#22d3ee')}
-                            {renderQueue('f1', 'F1', '#f472b6')}
-                            {renderQueue('f2', 'F2', '#c084fc')}
-                            {renderQueue('f3', 'F3', '#67e8f9')}
+                            {renderQueue('main', t('app.queues.main'), '#22d3ee')}
+                            {renderQueue('f1', t('app.queues.f1'), '#f472b6')}
+                            {renderQueue('f2', t('app.queues.f2'), '#c084fc')}
+                            {renderQueue('f3', t('app.queues.f3'), '#67e8f9')}
                         </div>
 
                         {/* Botones de control */}
                         <div className="flex flex-col gap-3 p-3 bg-bg-tertiary border border-border-custom rounded-sm">
                             <div className="flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
-                                <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">Speed</span>
+                                <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
+                                    {t('app.speed')}
+                                </span>
                                 <div className="flex gap-1">
                                     {[0.5, 1, 2].map(s => (
                                         <Button
                                             key={s}
-                                            intent="ghost"
-                                            isActive={speed === s}
+                                            intent={speed === s ? "solid" : "ghost"}
+                                            color={speed === s ? "green" : "cyan"}
                                             size="none"
-                                            className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-sm shadow-none"
+                                            className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
                                             onClick={() => setSpeed(s)}
                                         >
-                                            {s === 0.5 ? '1x' : s === 1 ? '2x' : '4x'}
+                                            {s === 0.5 ? '0.5x' : s === 1 ? '1x' : '2x'}
                                         </Button>
                                     ))}
                                 </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3 p-1 bg-black/10 border border-border-custom/20 rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                                 {!isRunning ? (
                                     <Button
-                                        intent="primary"
-                                        className="flex-1 tracking-[1px] font-jetbrains py-3"
+                                        intent="solid"
+                                        color="green"
+                                        size="md"
+                                        className="flex-1 font-black text-sm tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-green)_30%,transparent)]"
                                         onClick={handleRun}
                                         disabled={mainQueue.length === 0}
                                     >
-                                        <Play size={20} strokeWidth={2} className='fill-accent-green' /> Run
+                                        <Play size={18} strokeWidth={3} className="fill-bg-primary stroke-bg-primary" />
+                                        <span>{t('app.btn_run')}</span>
                                     </Button>
                                 ) : (
                                     <Button
-                                        intent="danger"
-                                        className="flex-1 tracking-[1px] font-jetbrains py-3"
+                                        intent="solid"
+                                        color="red"
+                                        size="md"
+                                        className="flex-1 font-black text-sm tracking-widest rounded-lg animate-pulse shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-red)_30%,transparent)]"
                                         onClick={handleStop}
                                     >
-                                        <Square size={20} strokeWidth={2} /> Stop
+                                        <Square size={18} strokeWidth={3} className="fill-white" />
+                                        <span>{t('app.btn_stop')}</span>
                                     </Button>
                                 )}
+
                                 <Button
-                                    intent="solid" color='yellow'
-                                    className="flex-1 tracking-[1px] font-jetbrains py-3"
+                                    intent="solid"
+                                    color="yellow"
+                                    size="md"
+                                    className="flex-1 font-black text-sm tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
                                     onClick={handleReset}
                                 >
-                                    <BrushCleaning size={20} strokeWidth={2} /> Clean
+                                    <EraserIcon size={18} strokeWidth={3} />
+                                    <span>{t('app.btn_clear')}</span>
                                 </Button>
                             </div>
                         </div>

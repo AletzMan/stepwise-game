@@ -1,0 +1,74 @@
+{
+  "translation": {
+    "header": {
+      "level": "Nivel {{id}}",
+      "levels_btn": "NIVELES"
+    },
+    "app": {
+      "commands_title": "Comandos",
+      "speed": "Velocidad",
+      "btn_run": "EJECUTAR",
+      "btn_stop": "DETENER",
+      "btn_clear": "LIMPIAR",
+      "running_program": "Ejecutando programa...",
+      "program_finished_incomplete": "Programa terminado — no se activaron todos los objetivos",
+      "error_prefix": "Error: {{message}}",
+      "queues": {
+        "main": "PRINCIPAL",
+        "f1": "F1",
+        "f2": "F2",
+        "f3": "F3"
+      }
+    },
+    "commands": {
+      "WALK": "Avanzar",
+      "JUMP": "Saltar",
+      "TURN_LEFT": "Izquierda",
+      "TURN_RIGHT": "Derecha",
+      "ACTIVATE": "Activar",
+      "F1": "F1",
+      "F2": "F2",
+      "F3": "F3"
+    },
+    "modals": {
+      "select_level": {
+        "title": "Seleccionar Nivel"
+      },
+      "level_complete": {
+        "title": "Misión Completada",
+        "level_title": "Nivel {{id}}",
+        "solved_msg": "¡Rompecabezas resuelto con éxito!",
+        "stats": {
+          "moves": "Movimientos",
+          "time": "Tiempo",
+          "xp": "XP"
+        },
+        "btn_next_level": "SIGUIENTE NIVEL"
+      },
+      "level_error": {
+        "title": "Ejecución Fallida",
+        "oops": "¡Oops!",
+        "default_msg": "El explorador no pudo llegar al destino. ¡Revisa tu secuencia!",
+        "btn_retry": "REINTENTAR NIVEL",
+        "btn_select_level": "SELECCIONAR NIVEL"
+      }
+    },
+    "levels": {
+      "1": {
+        "name": "Primeros Pasos",
+        "description": "Camina hacia adelante y activa las casillas objetivo. ¡Simple!"
+      },
+      "2": {
+        "name": "Subiendo",
+        "description": "Usa SALTAR para llegar a terreno más alto. ¡Usa F1 para ahorrar pasos!"
+      }
+    },
+    "errors": {
+      "Maximum recursion depth exceeded": "Se superó el límite de recursión máximo",
+      "Cannot move out of bounds!": "¡No se puede mover fuera de los límites!",
+      "Path is blocked by an obstacle!": "¡El camino está bloqueado por un obstáculo!",
+      "Cannot walk: height difference detected!": "¡No se puede caminar: se detectó diferencia de altura!",
+      "Cannot jump: height difference must be exactly 1 level!": "¡No se puede saltar: la diferencia de altura debe ser de exactamente 1 nivel!"
+    }
+  }
+}

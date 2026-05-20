@@ -51,12 +51,12 @@ const LEVEL_1: LevelData = {
     ],
     startPos: { x: 0, y: 0 },
     startDirection: 0, // SO (Sureste / SE en la brújula)
-    availableCommands: ['WALK', 'TURN_LEFT', 'TURN_RIGHT', 'ACTIVATE'],
+    availableCommands: ['WALK', 'TURN_LEFT', 'TURN_RIGHT', 'ACTIVATE', 'JUMP', 'F1', 'F2', 'F3'],
     goalCommands: 4,
     mainSlots: 12,
-    f1Slots: 0,
-    f2Slots: 0,
-    f3Slots: 0,
+    f1Slots: 2,
+    f2Slots: 2,
+    f3Slots: 2,
 };
 
 // ─── NIVEL 2: Subiendo ────────────────────────────────────────────────────────

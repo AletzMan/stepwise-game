@@ -2,18 +2,34 @@
 
 @import "tailwindcss";
 
+
 @theme {
-  --color-bg-primary: #0a0e1a;
-  --color-bg-secondary: #111827;
-  --color-bg-tertiary: #1a2236;
-  --color-bg-panel: #0f1629;
-  --color-border-custom: #1e2a45;
-  --color-border-glow: #22d3ee30;
+  /* FONDOS: Cambiamos el azul espacial por un gris pizarra con tinte Teal profundo.
+     Este tono es el puente perfecto entre la naturaleza verde/tierra y el neón cian. */
+  --color-bg-primary: #0a0f14;
+  /* Fondo absoluto (Gris azulado profundo, ultra limpio) */
+  --color-bg-secondary: #121820;
+  /* Contenedores principales (Da el contraste perfecto con los sprites) */
+  --color-bg-panel: #0e131a;
+  /* Fondo oscuro para las colas de comandos (MAIN, F1) */
+  --color-bg-tertiary: #1b232e;
+  /* Botones por defecto y fichas base */
 
-  --color-text-primary: #e8ecf4;
-  --color-text-secondary: #8899b4;
-  --color-text-muted: #4a5568;
+  /* BORDES: Más integrados, reduciendo la saturación para no distraer del juego */
+  --color-border-custom: rgba(141, 162, 187, 0.12);
+  /* Un gris azulado traslúcido muy fino */
+  --color-border-glow: rgba(34, 211, 238, 0.15);
+  /* Destello cian controlado para elementos activos */
 
+  /* TEXTOS: Adaptados para que se lean perfectos sobre el nuevo fondo */
+  --color-text-primary: #f1f5f9;
+  /* Blanco pizarra de alto contraste */
+  --color-text-secondary: #94a3b8;
+  /* Gris medio para etiquetas limpias */
+  --color-text-muted: #475569;
+  /* Sockets vacíos y deshabilitados */
+
+  /* ACENTOS: Tus neones originales (Se quedan intactos, porque contrastan perfecto aquí) */
   --color-accent-cyan: #22d3ee;
   --color-accent-green: #34d399;
   --color-accent-red: #f87171;
@@ -24,6 +40,7 @@
 
   --font-outfit: 'Outfit', sans-serif;
   --font-jetbrains: 'JetBrains Mono', monospace;
+  --font-titan-one: 'Titan One', sans-serif;
 
   --animate-star-animate: star-animate 0.35s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
   --animate-pulse-glow: pulse-glow 0.6s ease infinite alternate;
@@ -98,7 +115,7 @@ body {
 
 @utility cmd-btn-hover {
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--cmd-color) 15%, transparent);
+    background: color-mix(in srgb, var(--cmd-color) 25%, transparent);
     border-color: var(--cmd-color);
     box-shadow: 0 0 12px color-mix(in srgb, var(--cmd-color) 20%, transparent);
   }

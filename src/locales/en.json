@@ -1,0 +1,74 @@
+{
+  "translation": {
+    "header": {
+      "level": "Level {{id}}",
+      "levels_btn": "LEVELS"
+    },
+    "app": {
+      "commands_title": "Commands",
+      "speed": "Speed",
+      "btn_run": "RUN",
+      "btn_stop": "STOP",
+      "btn_clear": "CLEAR",
+      "running_program": "Running program...",
+      "program_finished_incomplete": "Program finished — not all goals activated",
+      "error_prefix": "Error: {{message}}",
+      "queues": {
+        "main": "MAIN",
+        "f1": "F1",
+        "f2": "F2",
+        "f3": "F3"
+      }
+    },
+    "commands": {
+      "WALK": "Walk",
+      "JUMP": "Jump",
+      "TURN_LEFT": "Left",
+      "TURN_RIGHT": "Right",
+      "ACTIVATE": "Pick",
+      "F1": "F1",
+      "F2": "F2",
+      "F3": "F3"
+    },
+    "modals": {
+      "select_level": {
+        "title": "Select Level"
+      },
+      "level_complete": {
+        "title": "Mission Complete",
+        "level_title": "Level {{id}}",
+        "solved_msg": "Puzzle solved successfully!",
+        "stats": {
+          "moves": "Moves",
+          "time": "Time",
+          "xp": "XP"
+        },
+        "btn_next_level": "NEXT LEVEL"
+      },
+      "level_error": {
+        "title": "Execution Failed",
+        "oops": "Oops!",
+        "default_msg": "The explorer couldn't reach the destination. Check your sequence!",
+        "btn_retry": "RETRY LEVEL",
+        "btn_select_level": "LEVEL SELECT"
+      }
+    },
+    "levels": {
+      "1": {
+        "name": "First Steps",
+        "description": "Walk forward and activate the goal tiles. Simple!"
+      },
+      "2": {
+        "name": "Climbing Up",
+        "description": "Use JUMP to reach higher ground. Use F1 to save steps!"
+      }
+    },
+    "errors": {
+      "Maximum recursion depth exceeded": "Maximum recursion depth exceeded",
+      "Cannot move out of bounds!": "Cannot move out of bounds!",
+      "Path is blocked by an obstacle!": "Path is blocked by an obstacle!",
+      "Cannot walk: height difference detected!": "Cannot walk: height difference detected!",
+      "Cannot jump: height difference must be exactly 1 level!": "Cannot jump: height difference must be exactly 1 level!"
+    }
+  }
+}

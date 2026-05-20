@@ -14,11 +14,32 @@ export const CommandButton = React.forwardRef<HTMLButtonElement, CommandButtonPr
     return (
         <button
             ref={ref}
-            className={`relative flex flex-row items-center justify-center gap-3 px-3 py-2 bg-bg-tertiary border border-border-custom rounded-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_6px_rgba(0,0,0,0.2)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_8px_16px_rgba(0,0,0,0.4)] active:translate-y-0 active:scale-95 disabled:opacity-30 disabled:pointer-events-none disabled:hover:translate-y-0 cmd-btn-hover ${isActive ? 'border-accent-cyan bg-accent-cyan/10 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : ''} ${className}`}
+            className={`
+                relative flex flex-row items-center justify-center gap-2 px-3 py-2
+                font-outfit font-black tracking-wide text-xs uppercase select-none
+                bg-bg-tertiary text-text-primary rounded-sm border border-b-3 border-(--cmd-color)/30
+                shadow-[0_3px_6px_rgba(0,0,0,0.4)]
+                transition-all duration-150 ease-out 
+                cursor-pointer overflow-hidden
+                
+                hover:-translate-y-px hover:border-b-3 hover:bg-bg-secondary
+                active:translate-y-[2px] active:border-b-px
+                disabled:opacity-20 disabled:pointer-events-none disabled:transform-none
+                cmd-btn-hover
+                
+                /* Reflejo superior estilo cristal/ficha de juego */
+                before:absolute before:inset-x-0 before:top-0 before:h-[40%] before:bg-white/5 before:pointer-events-none
+                
+                ${isActive ? 'border-accent-cyan bg-accent-cyan/10 text-accent-cyan shadow-[0_0_15px_color-mix(in_srgb,var(--color-accent-cyan)_30%,transparent)]' : ''} 
+                ${className}
+            `}
             style={style}
             {...props}
         >
-            {children}
+            {/* Contenedor interno para asegurar la jerarquía de capas sobre los reflejos */}
+            <span className="relative z-10 flex items-center justify-center gap-2 w-full h-full">
+                {children}
+            </span>
         </button>
     );
 });
