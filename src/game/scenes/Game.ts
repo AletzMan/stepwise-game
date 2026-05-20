@@ -202,7 +202,9 @@ export class Game extends Scene {
         f1: Command[],
         f2: Command[],
         f3: Command[],
-        depth: number
+        depth: number,
+        currentSlot: 'main' | 'f1' | 'f2' | 'f3' = 'main',
+        stack: { slot: string; index: number }[] = []
     ) {
         if (depth > 15) {
             throw new Error('Maximum recursion depth exceeded');
@@ -212,14 +214,22 @@ export class Game extends Scene {
             if (this.shouldStop) return;
 
             const cmd = commands[i];
-            EventBus.emit('execution-step', { command: cmd, index: i, depth });
+            const currentFrame = { slot: currentSlot, index: i };
+            const newStack = [...stack, currentFrame];
+
+            EventBus.emit('execution-step', { 
+                command: cmd, 
+                index: i, 
+                depth,
+                stack: newStack
+            });
 
             if (cmd === 'F1') {
-                await this.executeCommandList(f1, f1, f2, f3, depth + 1);
+                await this.executeCommandList(f1, f1, f2, f3, depth + 1, 'f1', newStack);
             } else if (cmd === 'F2') {
-                await this.executeCommandList(f2, f1, f2, f3, depth + 1);
+                await this.executeCommandList(f2, f1, f2, f3, depth + 1, 'f2', newStack);
             } else if (cmd === 'F3') {
-                await this.executeCommandList(f3, f1, f2, f3, depth + 1);
+                await this.executeCommandList(f3, f1, f2, f3, depth + 1, 'f3', newStack);
             } else {
                 await this.executeSingleCommand(cmd);
             }
