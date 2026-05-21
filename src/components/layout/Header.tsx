@@ -49,18 +49,6 @@ const Header: React.FC<HeaderProps> = ({ levelInfo, showLevelSelect, setShowLeve
 
             {/* Derecha: Acciones */}
             <div className="flex items-center gap-2">
-                {/* Botón de Idioma */}
-                <Button
-                    intent="accent"
-                    color="cyan"
-                    size="sm"
-                    onClick={toggleLanguage}
-                    className="font-black tracking-wider transition-all duration-300 gap-1.5 min-w-[70px] justify-center"
-                >
-                    <Languages size={14} strokeWidth={2.5} />
-                    <span className="font-jetbrains text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
-                </Button>
-
                 {/* Botón de Niveles */}
                 <Button
                     intent="accent"
@@ -73,6 +61,19 @@ const Header: React.FC<HeaderProps> = ({ levelInfo, showLevelSelect, setShowLeve
                     <Menu size={14} strokeWidth={2.5} className={showLevelSelect ? "rotate-90 transition-transform duration-300" : "transition-transform duration-300"} />
                     <span>{t('header.levels_btn')}</span>
                 </Button>
+
+                {/* Botón de Idioma */}
+                <Button
+                    intent="accent"
+                    color="cyan"
+                    size="sm"
+                    onClick={toggleLanguage}
+                    className="font-black tracking-wider transition-all duration-300 gap-1.5 min-w-[70px] justify-center"
+                >
+                    <Languages size={14} strokeWidth={2.5} />
+                    <span className="font-jetbrains text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
+                </Button>
+
             </div>
         </header>
     );

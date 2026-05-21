@@ -12,14 +12,104 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 // Diccionario de colores base de tu juego para evitar el anidamiento masivo de IFs
-const colorMap: Record<ButtonColor, { name: string; hex: string; lightBg: string; shadow: string; text: string }> = {
-    cyan: { name: 'accent-cyan', hex: 'var(--color-accent-cyan)', lightBg: 'bg-cyan-300', shadow: 'rgba(34,211,238,0.4)', text: 'text-bg-primary' },
-    purple: { name: 'accent-purple', hex: 'var(--color-accent-purple)', lightBg: 'bg-purple-300', shadow: 'rgba(167,139,250,0.4)', text: 'text-bg-primary' },
-    red: { name: 'accent-red', hex: 'var(--color-accent-red)', lightBg: 'bg-red-500', shadow: 'rgba(248,113,113,0.4)', text: 'text-white' },
-    green: { name: 'accent-green', hex: 'var(--color-accent-green)', lightBg: 'bg-emerald-400', shadow: 'rgba(52,211,153,0.4)', text: 'text-bg-primary' },
-    yellow: { name: 'accent-yellow', hex: 'var(--color-accent-yellow)', lightBg: 'bg-yellow-400', shadow: 'rgba(252,211,77,0.4)', text: 'text-bg-primary' },
-    orange: { name: 'accent-orange', hex: 'var(--color-accent-orange)', lightBg: 'bg-orange-400', shadow: 'rgba(249,115,22,0.4)', text: 'text-bg-primary' },
-    pink: { name: 'accent-pink', hex: 'var(--color-accent-pink)', lightBg: 'bg-pink-400', shadow: 'rgba(244,114,182,0.4)', text: 'text-bg-primary' },
+interface ColorTheme {
+    solidBg: string;
+    solidText: string;
+    solidHoverBg: string;
+    solidShadow: string;
+    accentBg: string;
+    accentText: string;
+    accentBorder: string;
+    accentHoverBg: string;
+    accentHoverBorder: string;
+    accentShadow: string;
+}
+
+const colorMap: Record<ButtonColor, ColorTheme> = {
+    cyan: {
+        solidBg: 'bg-accent-cyan',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-cyan-300',
+        solidShadow: 'shadow-[0_4px_12px_rgba(34,211,238,0.4)] hover:shadow-[0_6px_20px_rgba(34,211,238,0.4)]',
+        accentBg: 'bg-accent-cyan/10',
+        accentText: 'text-accent-cyan',
+        accentBorder: 'border-accent-cyan/30',
+        accentHoverBg: 'hover:bg-accent-cyan/20',
+        accentHoverBorder: 'hover:border-accent-cyan',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(34,211,238,0.4)]',
+    },
+    purple: {
+        solidBg: 'bg-accent-purple',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-purple-300',
+        solidShadow: 'shadow-[0_4px_12px_rgba(167,139,250,0.4)] hover:shadow-[0_6px_20px_rgba(167,139,250,0.4)]',
+        accentBg: 'bg-accent-purple/10',
+        accentText: 'text-accent-purple',
+        accentBorder: 'border-accent-purple/30',
+        accentHoverBg: 'hover:bg-accent-purple/20',
+        accentHoverBorder: 'hover:border-accent-purple',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(167,139,250,0.4)]',
+    },
+    red: {
+        solidBg: 'bg-accent-red',
+        solidText: 'text-white',
+        solidHoverBg: 'hover:bg-red-500',
+        solidShadow: 'shadow-[0_4px_12px_rgba(248,113,113,0.4)] hover:shadow-[0_6px_20px_rgba(248,113,113,0.4)]',
+        accentBg: 'bg-accent-red/10',
+        accentText: 'text-accent-red',
+        accentBorder: 'border-accent-red/30',
+        accentHoverBg: 'hover:bg-accent-red/20',
+        accentHoverBorder: 'hover:border-accent-red',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(248,113,113,0.4)]',
+    },
+    green: {
+        solidBg: 'bg-accent-green',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-emerald-400',
+        solidShadow: 'shadow-[0_4px_12px_rgba(52,211,153,0.4)] hover:shadow-[0_6px_20px_rgba(52,211,153,0.4)]',
+        accentBg: 'bg-accent-green/10',
+        accentText: 'text-accent-green',
+        accentBorder: 'border-accent-green/30',
+        accentHoverBg: 'hover:bg-accent-green/20',
+        accentHoverBorder: 'hover:border-accent-green',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(52,211,153,0.4)]',
+    },
+    yellow: {
+        solidBg: 'bg-accent-yellow',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-yellow-400',
+        solidShadow: 'shadow-[0_4px_12px_rgba(252,211,77,0.4)] hover:shadow-[0_6px_20px_rgba(252,211,77,0.4)]',
+        accentBg: 'bg-accent-yellow/10',
+        accentText: 'text-accent-yellow',
+        accentBorder: 'border-accent-yellow/30',
+        accentHoverBg: 'hover:bg-accent-yellow/20',
+        accentHoverBorder: 'hover:border-accent-yellow',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(252,211,77,0.4)]',
+    },
+    orange: {
+        solidBg: 'bg-accent-orange',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-orange-400',
+        solidShadow: 'shadow-[0_4px_12px_rgba(249,115,22,0.4)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.4)]',
+        accentBg: 'bg-accent-orange/10',
+        accentText: 'text-accent-orange',
+        accentBorder: 'border-accent-orange/30',
+        accentHoverBg: 'hover:bg-accent-orange/20',
+        accentHoverBorder: 'hover:border-accent-orange',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(249,115,22,0.4)]',
+    },
+    pink: {
+        solidBg: 'bg-accent-pink',
+        solidText: 'text-bg-primary',
+        solidHoverBg: 'hover:bg-pink-400',
+        solidShadow: 'shadow-[0_4px_12px_rgba(244,114,182,0.4)] hover:shadow-[0_6px_20px_rgba(244,114,182,0.4)]',
+        accentBg: 'bg-accent-pink/10',
+        accentText: 'text-accent-pink',
+        accentBorder: 'border-accent-pink/30',
+        accentHoverBg: 'hover:bg-accent-pink/20',
+        accentHoverBorder: 'hover:border-accent-pink',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(244,114,182,0.4)]',
+    },
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
@@ -31,6 +121,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     children,
     style,
     ...props
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 }, ref) => {
 
     // Estilo base con animaciones mejoradas para videojuegos (Feedback táctil fluido)
@@ -78,13 +169,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
             break;
 
         case 'accent':
-            intentStyle = `bg-${activeColor.name}/10 text-${activeColor.name} border-${activeColor.name}/30 hover:bg-${activeColor.name}/20 hover:border-${activeColor.name}
-            hover:shadow-[0_0_16px_color-mix(in_srgb,${activeColor.hex}_40%,transparent)] ${premiumEffects}`;
+            intentStyle = `${activeColor.accentBg} ${activeColor.accentText} ${activeColor.accentBorder} ${activeColor.accentHoverBg} ${activeColor.accentHoverBorder} ${activeColor.accentShadow} ${premiumEffects}`;
             break;
 
         case 'solid':
-            intentStyle = `bg-${activeColor.name} ${activeColor.text} border-black/20 hover:${activeColor.lightBg}
-            shadow-[0_4px_12px_${activeColor.shadow}] hover:shadow-[0_6px_20px_${activeColor.shadow}] ${premiumEffects}`;
+            intentStyle = `${activeColor.solidBg} ${activeColor.solidText} border-black/20 ${activeColor.solidHoverBg} ${activeColor.solidShadow} ${premiumEffects}`;
             break;
 
         case 'ghost':

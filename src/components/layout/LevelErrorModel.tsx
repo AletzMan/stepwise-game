@@ -58,7 +58,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                     </div>
 
                     {/* El mensaje de error (Tu prop principal) */}
-                    <div className="my-5 p-3 bg-bg-panel border border-border-custom rounded-xl min-h-[60px] flex items-center justify-center">
+                    <div className="my-5 p-3 bg-bg-panel border border-border-custom rounded-md min-h-[60px] flex items-center justify-center">
                         <p className="text-text-secondary text-sm font-medium tracking-wide leading-relaxed">
                             {message || t('modals.level_error.default_msg')}
                         </p>
@@ -70,7 +70,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                         <Button
                             intent="solid"
                             color="yellow"
-                            className="w-full h-12 rounded-xl text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-yellow)_20%,transparent)] flex items-center justify-center gap-2"
+                            className="w-full h-12 rounded-md text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-yellow)_20%,transparent)] flex items-center justify-center gap-2"
                             onClick={() => {
                                 setShowStatusLevel(false);
                                 handleRetryLevel();
@@ -85,7 +85,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                             <Button
                                 intent="solid"
                                 color="purple"
-                                className="w-full h-11 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                className="w-full h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                                 onClick={() => {
                                     setShowStatusLevel(false);
                                     onGoToMenu();

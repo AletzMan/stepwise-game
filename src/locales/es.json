@@ -21,11 +21,11 @@
       }
     },
     "commands": {
-      "WALK": "Avanzar",
+      "WALK": "Caminar",
       "JUMP": "Saltar",
       "TURN_LEFT": "Izquierda",
       "TURN_RIGHT": "Derecha",
-      "ACTIVATE": "Activar",
+      "ACTIVATE": "Picar",
       "F1": "F1",
       "F2": "F2",
       "F3": "F3"
