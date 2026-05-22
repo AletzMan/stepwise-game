@@ -34,8 +34,8 @@ export class Game extends Scene {
     }
 
     preload() {
-        this.load.spritesheet('robot', 'assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
-        this.load.spritesheet('tiles', 'assets/tiles.png', { frameWidth: 64, frameHeight: 96 });
+        this.load.spritesheet('robot', '/assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
+        this.load.spritesheet('tiles', '/assets/tiles.png', { frameWidth: 64, frameHeight: 96 });
     }
 
     create() {
