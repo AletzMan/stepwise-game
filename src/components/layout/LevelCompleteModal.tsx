@@ -111,7 +111,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                             color="green"
                             className="w-full h-12 rounded-xl text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-green)_25%,transparent)] hover:shadow-[0_4px_25px_color-mix(in_srgb,var(--color-accent-green)_40%,transparent)] flex items-center justify-center gap-1"
                             onClick={() => {
-                                handleLoadLevel(levelInfo!.id + 1);
+                                navigate(`/levels/${levelInfo!.id + 1}`);
                             }}
                         >
                             <span>{t('modals.level_complete.btn_next_level')}</span>

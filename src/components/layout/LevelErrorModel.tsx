@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../ui/Button';
-import { RotateCcw, Menu, AlertTriangle } from 'lucide-react';
+import { RotateCcw, AlertTriangle, LayoutGrid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface LevelErrorModalProps {
@@ -91,7 +91,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                                     onGoToMenu();
                                 }}
                             >
-                                <Menu size={18} strokeWidth={2.5} />
+                                <LayoutGrid size={18} strokeWidth={2.5} />
                                 <span>{t('modals.level_error.btn_select_level')}</span>
                             </Button>
                         )}

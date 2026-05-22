@@ -3,7 +3,6 @@ import { IRefPhaserGame, PhaserGame } from '../PhaserGame';
 import { EventBus } from '../game/EventBus';
 import { Command, LEVELS, LevelData } from '../game/levels';
 import Header from '../components/layout/Header';
-import LevelSelectModal from '../components/layout/LevelSelectModal';
 import LevelCompleteModal from '../components/layout/LevelCompleteModal';
 import '@fontsource/titan-one';
 import Button from '../components/ui/Button';
@@ -11,27 +10,25 @@ import CommandButton from '../components/ui/CommandButton';
 import { Play, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe, Box, EraserIcon } from 'lucide-react';
 import LevelErrorModal from '../components/layout/LevelErrorModel';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
-// Configuración de visualización de comandos
 const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
-    WALK: { label: 'Walk', icon: <ArrowRight size={16} strokeWidth={3} />, color: '#22d3ee' },
-    JUMP: { label: 'Jump', icon: <ArrowUp size={16} strokeWidth={3} />, color: '#a78bfa' },
+    WALK: { label: 'Walk', icon: <ArrowRight size={16} strokeWidth={3} />, color: '#94a3b8' },
+    JUMP: { label: 'Jump', icon: <ArrowUp size={16} strokeWidth={3} />, color: '#38bdf8' },
     TURN_LEFT: { label: 'Left', icon: <CornerUpLeft size={16} strokeWidth={3} />, color: '#fbbf24' },
     TURN_RIGHT: { label: 'Right', icon: <CornerUpRight size={16} strokeWidth={3} />, color: '#fb923c' },
-    ACTIVATE: { label: 'Pick', icon: <Pickaxe size={16} strokeWidth={0} fill='currentColor' />, color: '#34d399' },
+    ACTIVATE: { label: 'Pick', icon: <Pickaxe size={16} strokeWidth={0} fill='currentColor' />, color: '#7ccf00' },
     F1: { label: 'F1', icon: <Box size={16} strokeWidth={3} />, color: '#f472b6' },
-    F2: { label: 'F2', icon: <Box size={16} strokeWidth={3} />, color: '#c084fc' },
-    F3: { label: 'F3', icon: <Box size={16} strokeWidth={3} />, color: '#67e8f9' },
+    F2: { label: 'F2', icon: <Box size={16} strokeWidth={3} />, color: '#a78bfa' },
+    F3: { label: 'F3', icon: <Box size={16} strokeWidth={3} />, color: '#2dd4bf' },
 };
-
 
 
 type ProgramSlot = 'main' | 'f1' | 'f2' | 'f3';
 
 export function Level() {
     const location = useLocation();
-    console.log(location);
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [levelInfo, setLevelInfo] = useState<LevelData | null>(null);
@@ -42,8 +39,7 @@ export function Level() {
     const [isRunning, setIsRunning] = useState(false);
     const [activeSlot, setActiveSlot] = useState<ProgramSlot>('main');
     const [executionStack, setExecutionStack] = useState<{ slot: ProgramSlot; index: number }[]>([]);
-    const [showLevelSelect, setShowLevelSelect] = useState(false);
-    const [completedLevels, setCompletedLevels] = useState<Set<number>>(new Set());
+    const [_completedLevels, setCompletedLevels] = useState<Set<number>>(new Set());
     const [speed, setSpeed] = useState<number>(1);
     const [statusMessage, setStatusMessage] = useState<string>('');
     const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>('info');
@@ -64,15 +60,19 @@ export function Level() {
             return t('app.running_program');
         }
         if (status === 'description' && levelInfo) {
-            return t(`levels.${levelInfo.id}.description`, { defaultValue: levelInfo.description });
+            return t(`levels.${location.pathname.split('/').pop()!}.description`, { defaultValue: levelInfo.description });
         }
         return status;
-    }, [t, levelInfo]);
+    }, [t, levelInfo, location.pathname]);
 
     // Escuchar eventos desde Phaser
     useEffect(() => {
         const onLevelLoaded = (info: LevelData) => {
-            setLevelInfo(info);
+            const selectedLevel = LEVELS.find(l => l.id === info.id);
+            if (!selectedLevel) {
+                return;
+            }
+            setLevelInfo(selectedLevel);
             setMainQueue([]);
             setF1Queue([]);
             setF2Queue([]);
@@ -177,7 +177,7 @@ export function Level() {
             case 'f2': return levelInfo.f2Slots;
             case 'f3': return levelInfo.f3Slots;
         }
-    }, [levelInfo]);
+    }, [levelInfo, location.pathname]);
 
     const setQueue = useCallback((slot: ProgramSlot, queue: Command[]) => {
         switch (slot) {
@@ -250,14 +250,28 @@ export function Level() {
 
     const handleLoadLevel = (levelId: number) => {
         EventBus.emit('load-level', levelId);
-        setShowLevelSelect(false);
         setShowStatusLevel(false);
         setShowErrorLevel(false);
     };
 
+    const sceneReady = useRef(false);
+
     const currentScene = (_scene: Phaser.Scene) => {
-        // No-op for now
+        // La escena de Phaser está lista; marcarla como tal.
+        // No emitimos 'load-level' aquí porque Game.create() ya carga
+        // el nivel basándose en la URL del navegador al inicializarse.
+        sceneReady.current = true;
     };
+
+    useEffect(() => {
+        // Solo emitir 'load-level' si la escena ya está lista.
+        // En el primer montaje, Game.create() ya carga el nivel desde la URL,
+        // así que no necesitamos hacer nada hasta que cambie el pathname.
+        if (sceneReady.current) {
+            handleLoadLevel(parseInt(location.pathname.split('/').pop()!, 10));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname]);
 
     // Filtrar comandos: no mostrar F1/F2/F3 en sus propios paneles para evitar la recursión directa
     const getAvailableCommandsForSlot = (slot: ProgramSlot): Command[] => {
@@ -329,7 +343,7 @@ export function Level() {
                                 className={`w-9 h-9 flex items-center justify-center rounded-sm transition-all duration-200 relative cursor-pointer
                                 ${cmd
                                         ? 'bg-(--cmd-color)/5 border border-b-[3px] border-(--cmd-color)/20 cmd-btn-hover active:translate-y-px active:border-b'
-                                        : 'bg-black/20 border border-dashed border-border-custom/30 hover:border-border-custom/60'
+                                        : 'bg-black/20 border border-dashed border-(--queue-color)/25 hover:border-(--queue-color)/30'
                                     } 
                                 ${isHighlighted
                                         ? 'animate-pulse-glow border-(--cmd-color)! bg-linear-to-t from-(--cmd-color)/15 to-transparent scale-105 z-10 shadow-[0_0_15px_color-mix(in_srgb,var(--cmd-color)_40%,transparent)]'
@@ -350,7 +364,7 @@ export function Level() {
                                     <span className="slot-icon text-lg text-(--cmd-color) leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110">
                                         {COMMAND_CONFIG[cmd].icon} </span>
                                 ) : (
-                                    <span className="text-[0.75rem] font-bold text-text-muted/20 select-none transition-colors group-hover:text-text-muted/40">+</span>
+                                    <span className="text-md font-semibold text-(--queue-color)/30 select-none transition-colors group-hover:text-text-muted/40">+</span>
                                 )}
                             </div>
                         );
@@ -367,19 +381,7 @@ export function Level() {
                 {/* Encabezado */}
                 <Header
                     levelInfo={levelInfo}
-                    showLevelSelect={showLevelSelect}
-                    setShowLevelSelect={setShowLevelSelect}
                 />
-
-                {/* Superposición de selección de nivel */}
-                {showLevelSelect && (
-                    <LevelSelectModal
-                        levelInfo={levelInfo}
-                        completedLevels={completedLevels}
-                        setShowLevelSelect={setShowLevelSelect}
-                        handleLoadLevel={handleLoadLevel}
-                    />
-                )}
 
                 {/* Superposición de estado del nivel */}
                 {showStatusLevel && (
@@ -401,7 +403,7 @@ export function Level() {
                         show={showErrorLevel}
                         setShowStatusLevel={setShowStatusLevel}
                         handleRetryLevel={() => handleLoadLevel(levelInfo?.id || 0)}
-                        onGoToMenu={() => handleLoadLevel(0)}
+                        onGoToMenu={() => navigate('/levels')}
                     />
                 )}
 
@@ -413,7 +415,7 @@ export function Level() {
                     </div>
 
                     {/* Panel de programación */}
-                    <div className="w-[324px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
+                    <div className="w-[325px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
                         {/* Barra de estado */}
                         {/*<div className={`py-2.5 px-4 rounded-sm border transition-all duration-300 ${statusType === 'info' ? 'border-accent-cyan/20 bg-accent-cyan/5' : statusType === 'success' ? 'border-accent-green/40 bg-accent-green/8 shadow-[0_0_20px_rgba(52,211,153,0.1)]' : 'border-accent-red/30 bg-accent-red/6'}`}>
                             <span className={`text-[0.8rem] font-normal leading-[1.4] ${statusType === 'info' ? 'text-text-secondary' : statusType === 'success' ? 'text-accent-green font-semibold' : 'text-accent-red'}`}>{statusMessage}</span>
@@ -449,8 +451,8 @@ export function Level() {
                         <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto min-h-0 queues-scrollbar">
                             {renderQueue('main', t('app.queues.main'), '#22d3ee')}
                             {renderQueue('f1', t('app.queues.f1'), '#f472b6')}
-                            {renderQueue('f2', t('app.queues.f2'), '#c084fc')}
-                            {renderQueue('f3', t('app.queues.f3'), '#67e8f9')}
+                            {renderQueue('f2', t('app.queues.f2'), '#a78bfa')}
+                            {renderQueue('f3', t('app.queues.f3'), '#2dd4bf')}
                         </div>
 
                         {/* Botones de control */}
