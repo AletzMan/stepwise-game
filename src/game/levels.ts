@@ -46,6 +46,10 @@ const LEVEL_1: LevelData = {
     id: 1,
     name: 'First Steps',
     description: 'Walk forward and activate the goal tiles. Simple!',
+    //Crea mapa de 15 x 15 
+    // map: Array(11).fill(Array(11).fill({ h: 0, t: T.GRAY })),
+
+
     map: [
         [{ h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.GRAY }, { h: 0, t: T.BLUE },],
     ],

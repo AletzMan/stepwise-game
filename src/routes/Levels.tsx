@@ -65,7 +65,7 @@ export default function Levels() {
                     {LEVELS.map((level, index) => {
                         // Simulación de estados para darle dinamismo visual a la UI
                         // (Puedes reemplazar esto luego con tu lógica real de progreso/LocalStorage) 
-                        const isUnlocked = index <= 0;
+                        const isUnlocked = index <= 2;
                         const isCompleted = index < 1;
 
                         return (
