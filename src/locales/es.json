@@ -54,8 +54,17 @@
       }
     },
     "levels": {
+      "tag": "MAPA DE VIAJE",
+      "title": "DESAFÍOS",
+      "subtitle": "Selecciona un sector para comenzar",
+      "back": "INICIO",
+      "status": {
+        "done": "COMPLETADO",
+        "locked": "BLOQUEADO",
+        "unlocked": "DESBLOQUEADO"
+      },
       "1": {
-        "name": "Primeros Pasos",
+        "name": "Primeros Pasos primeros",
         "description": "Camina hacia adelante y activa las casillas objetivo. ¡Simple!"
       },
       "2": {

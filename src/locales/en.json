@@ -54,6 +54,15 @@
       }
     },
     "levels": {
+      "tag": "TRAVEL MAP",
+      "title": "CHALLENGES",
+      "subtitle": "Select a sector to start",
+      "back": "HOME",
+      "status": {
+        "done": "DONE",
+        "locked": "LOCKED",
+        "unlocked": "UNLOCKED"
+      },
       "1": {
         "name": "First Steps",
         "description": "Walk forward and activate the goal tiles. Simple!"

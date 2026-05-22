@@ -1,14 +1,15 @@
 import React from 'react';
 import Button from '../ui/Button';
-import { ChevronRight, Menu, RotateCcw } from 'lucide-react';
+import { ChevronRight, LayoutGrid, RotateCcw } from 'lucide-react';
 import { LevelData } from '../../game/levels';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 interface LevelCompleteModalProps {
     levelInfo: LevelData | null;
     statusType: 'info' | 'success' | 'error';
     stars: number;
-    executedCommands: React.MutableRefObject<number>;
+    executedCommands: React.RefObject<number>;
     setShowStatusLevel: (show: boolean) => void;
     setStatusType: (type: 'info' | 'success' | 'error') => void;
     handleLoadLevel: (id: number) => void;
@@ -18,6 +19,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
     levelInfo, statusType, stars, executedCommands, setShowStatusLevel, setStatusType, handleLoadLevel
 }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     if (statusType !== 'success') return null;
 
@@ -124,9 +126,10 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                                 onClick={() => {
                                     setStatusType('info');
                                     setShowStatusLevel(false);
+                                    navigate('/levels');
                                 }}
                             >
-                                <Menu size={20} strokeWidth={2.5} />
+                                <LayoutGrid size={20} strokeWidth={2.5} />
                             </Button>
                             <Button
                                 intent="solid"
@@ -134,6 +137,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                                 className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                 onClick={() => {
                                     handleLoadLevel(levelInfo!.id);
+
                                 }}
                             >
                                 <RotateCcw size={20} strokeWidth={2.5} />
