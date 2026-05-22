@@ -41,6 +41,14 @@ export class Game extends Scene {
     create() {
         this.createAnimations();
 
+        // Limpiar listeners previos del EventBus para evitar duplicados
+        // cuando la escena se destruye y recrea (por navegación entre rutas)
+        EventBus.removeAllListeners('load-level');
+        EventBus.removeAllListeners('run-program');
+        EventBus.removeAllListeners('stop-program');
+        EventBus.removeAllListeners('reset-level');
+        EventBus.removeAllListeners('set-speed');
+
         // Escuchar eventos desde la interfaz de React
         EventBus.on('load-level', (levelId: number) => {
             this.loadLevel(levelId);
@@ -72,10 +80,23 @@ export class Game extends Scene {
             }
         });
 
-        // Cargar el nivel 1 por defecto
-        this.loadLevel(1);
+        // Limpiar listeners del EventBus cuando la escena se apague
+        this.events.on('shutdown', () => {
+            EventBus.removeAllListeners('load-level');
+            EventBus.removeAllListeners('run-program');
+            EventBus.removeAllListeners('stop-program');
+            EventBus.removeAllListeners('reset-level');
+            EventBus.removeAllListeners('set-speed');
+        });
 
-        EventBus.emit('current_scene', 'Game');
+        // Cargar el nivel correspondiente según el pathname de la URL o usar 1 por defecto
+        const pathParts = window.location.pathname.split('/');
+        const urlLevelId = parseInt(pathParts[pathParts.length - 1], 10);
+        const startLevelId = !isNaN(urlLevelId) ? urlLevelId : 1;
+
+        this.loadLevel(startLevelId);
+
+        EventBus.emit('current-scene-ready', this);
     }
 
     loadLevel(levelId: number) {
@@ -217,9 +238,9 @@ export class Game extends Scene {
             const currentFrame = { slot: currentSlot, index: i };
             const newStack = [...stack, currentFrame];
 
-            EventBus.emit('execution-step', { 
-                command: cmd, 
-                index: i, 
+            EventBus.emit('execution-step', {
+                command: cmd,
+                index: i,
                 depth,
                 stack: newStack
             });
@@ -371,13 +392,15 @@ export class Game extends Scene {
             this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1);
             this.shadow.setScale(1);
         }
-        if (this.robot) {
+        if (this.robot && this.robot.active) {
             this.robot.setPosition(startPos.x, startPos.y);
             this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
 
             const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
             const idleFrame = this.direction * 4;
-            this.robot.stop();
+            if (this.robot.anims) {
+                this.robot.anims.stop();
+            }
             this.robot.setFrame(idleFrame);
             this.robot.play(`idle-${dirKey}`, true);
             if (this.robot.anims) {
