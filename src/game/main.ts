@@ -1,7 +1,5 @@
 import { Boot } from './scenes/Boot';
-import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
-import { MainMenu } from './scenes/MainMenu';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import * as Phaser from 'phaser';
@@ -13,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 768,
     height: 768,
     parent: 'game-container',
-    pixelArt: true,
+    pixelArt: false,
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.Center.CENTER_BOTH,
@@ -28,9 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [
         Boot,
         Preloader,
-        MainMenu,
-        MainGame,
-        GameOver
+        MainGame
     ]
 };
 
