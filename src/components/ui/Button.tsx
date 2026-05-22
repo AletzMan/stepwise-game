@@ -65,14 +65,14 @@ const colorMap: Record<ButtonColor, ColorTheme> = {
     green: {
         solidBg: 'bg-accent-green',
         solidText: 'text-bg-primary',
-        solidHoverBg: 'hover:bg-emerald-400',
-        solidShadow: 'shadow-[0_4px_12px_rgba(52,211,153,0.4)] hover:shadow-[0_6px_20px_rgba(52,211,153,0.4)]',
+        solidHoverBg: 'hover:bg-lime-400',
+        solidShadow: 'shadow-[0_4px_12px_rgba(124,207,0,0.4)] hover:shadow-[0_6px_20px_rgba(124,207,0,0.4)]',
         accentBg: 'bg-accent-green/10',
         accentText: 'text-accent-green',
         accentBorder: 'border-accent-green/30',
         accentHoverBg: 'hover:bg-accent-green/20',
         accentHoverBorder: 'hover:border-accent-green',
-        accentShadow: 'hover:shadow-[0_0_16px_rgba(52,211,153,0.4)]',
+        accentShadow: 'hover:shadow-[0_0_16px_rgba(124,207,0,0.4)]',
     },
     yellow: {
         solidBg: 'bg-accent-yellow',
@@ -121,7 +121,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     children,
     style,
     ...props
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
 }, ref) => {
 
     // Estilo base con animaciones mejoradas para videojuegos (Feedback táctil fluido)

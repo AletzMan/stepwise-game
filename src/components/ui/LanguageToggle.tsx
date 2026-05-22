@@ -21,10 +21,10 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ className = '' }) => {
             color="cyan"
             size="sm"
             onClick={toggleLanguage}
-            className={`font-black tracking-wider transition-all duration-300 gap-1.5 min-w-[70px] justify-center ${className}`}
+            className={`font-black tracking-wider transition-all duration-300 gap-1.5 justify-center ${className}`}
         >
             <Languages size={14} strokeWidth={2.5} />
-            <span className="font-jetbrains text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
+            <span className="font-jetbrains text-xs hidden md:block">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
         </Button>
     );
 };
