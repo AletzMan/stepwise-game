@@ -5,9 +5,11 @@ import LanguageToggle from "../components/ui/LanguageToggle";
 import { LevelCard } from "../components/layout/levels/LevelCard";
 import { NavLink } from "react-router";
 import { LogoSteps } from "../components/layout/LogoSteps";
+import { useGameStore } from "../store/gameStore";
 
 export default function Levels() {
     const { t } = useTranslation();
+    const levels = useGameStore((state) => state.levels);
 
     return (
         <div className="min-h-screen bg-bg-primary relative overflow-hidden flex flex-col items-center select-none px-4 py-12 md:py-16">
@@ -31,16 +33,16 @@ export default function Levels() {
             <div className="absolute top-4 right-4 z-10 flex flex-row gap-2 items-center">
                 <LanguageToggle />
             </div>
-            {/* 🌐 PATRÓN DE FONDO: Cuadrícula tecnológica coherente con la Home */}
+            {/*  PATRÓN DE FONDO: Cuadrícula tecnológica coherente con la Home */}
             <div
                 className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border-custom)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border-custom)_1px,transparent_1px)] bg-size-[4rem_4rem]"
                 style={{ maskImage: 'radial-gradient(circle at center, white 30%, transparent 85%)', WebkitMaskImage: 'radial-gradient(circle at center, white 30%, transparent 85%)' }}
             />
 
-            {/* 💥 DESTELLOS ATMOSFÉRICOS AMORTIGUADOS */}
+            {/* DESTELLOS ATMOSFÉRICOS AMORTIGUADOS */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-accent-cyan/5 blur-[150px] rounded-full pointer-events-none" />
 
-            {/* 🖥️ CONTENEDOR PRINCIPAL */}
+            {/* CONTENEDOR PRINCIPAL */}
             <div className="max-w-4xl w-full z-10 animate-slide-up flex flex-col items-center">
 
                 {/* Cabecera de la sección */}
@@ -60,20 +62,19 @@ export default function Levels() {
                     {t('levels.subtitle')}
                 </p>
 
-                {/* 🗺️ MAPA DE SECTORES (GRID TÁCTICA) */}
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,150px))] gap-4 w-full justify-center">
+                {/* MAPA DE SECTORES (GRID TÁCTICA) */}
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-4 w-full justify-center items-start h-[calc(100svh-220px)] overflow-y-auto">
                     {LEVELS.map((level, index) => {
                         // Simulación de estados para darle dinamismo visual a la UI
                         // (Puedes reemplazar esto luego con tu lógica real de progreso/LocalStorage) 
-                        const isUnlocked = index <= 2;
-                        const isCompleted = index < 1;
+                        const status = levels.find(l => l.id === level.id)?.status || 'locked';
 
                         return (
                             <LevelCard
                                 key={level.id}
                                 level={level.id}
-                                status={isCompleted ? "completed" : isUnlocked ? "unlocked" : "locked"}
-                                stars={index + 1}
+                                status={index === 0 && status !== 'completed' ? 'unlocked' : status}
+                                stars={levels.find(l => l.id === level.id)?.stars || 0}
                             />
                         );
                     })}

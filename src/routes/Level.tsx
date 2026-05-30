@@ -11,6 +11,7 @@ import { Play, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe
 import LevelErrorModal from '../components/layout/LevelErrorModel';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
+import { useGameStore } from '../store/gameStore';
 
 const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
     WALK: { label: 'Walk', icon: <ArrowRight size={16} strokeWidth={3} />, color: '#94a3b8' },
@@ -47,6 +48,8 @@ export function Level() {
     const [showErrorLevel, setShowErrorLevel] = useState(false);
     const [stars, setStars] = useState<number>(0); // Numero de estrellas ganadas en el nivel actual 
     const executedCommands = useRef<number>(0); // Numero total de comandos ejecutados en el nivel actual
+    const setLevels = useGameStore((state) => state.setLevels);
+    const levels = useGameStore((state) => state.levels);
 
     const getStatusText = useCallback((status: string) => {
         if (status === 'incomplete') {
@@ -104,13 +107,16 @@ export function Level() {
             setStatusType('success');
             setTimeout(() => {
                 setShowStatusLevel(true);
-                setStars(calculateStars(levelId, executedCommands.current));
+                const stars = calculateStars(levelId, executedCommands.current);
+                setStars(stars);
+                saveStateLevel('completed', stars);
             }, 500);
             setIsRunning(false);
             setExecutionStack([]);
         };
 
         const onExecutionComplete = (data: { success: boolean; message: string }) => {
+            console.log('data', data);
             if (!data.success) {
                 setStatusMessage('incomplete');
                 setStatusType('error');
@@ -120,6 +126,7 @@ export function Level() {
             }
             setIsRunning(false);
             setExecutionStack([]);
+            saveStateLevel('unlocked', 0);
         };
 
         const onExecutionFail = (message: string) => {
@@ -130,6 +137,7 @@ export function Level() {
             setTimeout(() => {
                 setShowErrorLevel(true);
             }, 500);
+            saveStateLevel('unlocked', 0);
         };
 
         const onExecutionEnd = () => {
@@ -261,6 +269,46 @@ export function Level() {
         // No emitimos 'load-level' aquí porque Game.create() ya carga
         // el nivel basándose en la URL del navegador al inicializarse.
         sceneReady.current = true;
+    };
+
+    const saveStateLevel = (status: 'completed' | 'unlocked' | 'locked', stars: number) => {
+        const currentLevel = parseInt(location.pathname.split('/').pop()!, 10);
+        if (isNaN(currentLevel)) return;
+
+        const levelsMap = new Map(levels.map(lvl => [lvl.id, lvl]));
+        const currentLevelSaved = levelsMap.get(currentLevel);
+
+        if (status === 'completed') {
+            const nextLevel = currentLevel + 1;
+
+            // REGLA DE ORO: ¿Se deben actualizar las estrellas?
+            // 1. Si el nivel no existía antes, se guarda.
+            // 2. Si ya existía, solo se actualiza si las nuevas estrellas superan al récord actual.
+            const currentStars = currentLevelSaved?.stars || 0;
+            const shouldUpdateStars = !currentLevelSaved || stars > currentStars;
+
+            // Actualizamos el nivel actual
+            levelsMap.set(currentLevel, {
+                id: currentLevel,
+                status,
+                stars: shouldUpdateStars ? stars : currentStars // Mantiene el récord si no lo superó
+            });
+
+            // Desbloqueamos el siguiente nivel si no estaba desbloqueado o completado ya
+            const nextLevelSaved = levelsMap.get(nextLevel);
+            if (!nextLevelSaved || nextLevelSaved.status === 'locked') {
+                levelsMap.set(nextLevel, { id: nextLevel, status: 'unlocked', stars: 0 });
+            }
+
+        } else if (status === 'unlocked') {
+            // Solo lo marcamos como desbloqueado si no estaba completado antes
+            if (currentLevelSaved?.status !== 'completed') {
+                levelsMap.set(currentLevel, { id: currentLevel, status, stars });
+            }
+        }
+
+        // Guardamos el array limpio y ordenado por ID
+        setLevels(Array.from(levelsMap.values()).sort((a, b) => a.id - b.id));
     };
 
     useEffect(() => {
@@ -416,10 +464,6 @@ export function Level() {
 
                     {/* Panel de programación */}
                     <div className="w-[325px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
-                        {/* Barra de estado */}
-                        {/*<div className={`py-2.5 px-4 rounded-sm border transition-all duration-300 ${statusType === 'info' ? 'border-accent-cyan/20 bg-accent-cyan/5' : statusType === 'success' ? 'border-accent-green/40 bg-accent-green/8 shadow-[0_0_20px_rgba(52,211,153,0.1)]' : 'border-accent-red/30 bg-accent-red/6'}`}>
-                            <span className={`text-[0.8rem] font-normal leading-[1.4] ${statusType === 'info' ? 'text-text-secondary' : statusType === 'success' ? 'text-accent-green font-semibold' : 'text-accent-red'}`}>{statusMessage}</span>
-                        </div>*/}
 
                         {/* Paleta de comandos */}
                         <div className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
@@ -482,7 +526,7 @@ export function Level() {
                                         intent="solid"
                                         color="green"
                                         size="md"
-                                        className="flex-1 font-black text-sm tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-green)_30%,transparent)]"
+                                        className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-green)_30%,transparent)]"
                                         onClick={handleRun}
                                         disabled={mainQueue.length === 0}
                                     >
@@ -494,7 +538,7 @@ export function Level() {
                                         intent="solid"
                                         color="red"
                                         size="md"
-                                        className="flex-1 font-black text-sm tracking-widest rounded-lg animate-pulse shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-red)_30%,transparent)]"
+                                        className="flex-1 font-black text-xs tracking-widest rounded-lg animate-pulse shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-red)_30%,transparent)]"
                                         onClick={handleStop}
                                     >
                                         <Square size={18} strokeWidth={3} className="fill-white" />
@@ -506,7 +550,7 @@ export function Level() {
                                     intent="solid"
                                     color="yellow"
                                     size="md"
-                                    className="flex-1 font-black text-sm tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
+                                    className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
                                     onClick={handleReset}
                                 >
                                     <EraserIcon size={18} strokeWidth={3} />
