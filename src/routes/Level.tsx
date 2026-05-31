@@ -12,6 +12,8 @@ import LevelErrorModal from '../components/layout/LevelErrorModel';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useGameStore } from '../store/gameStore';
+import { driver } from 'driver.js';
+import { TUTORIAL_CONFIG, TUTORIAL_STEPS } from '../game/data/tutorialStep';
 
 const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
     WALK: { label: 'Walk', icon: <ArrowRight size={16} strokeWidth={3} />, color: '#94a3b8' },
@@ -167,6 +169,35 @@ export function Level() {
     useEffect(() => {
         EventBus.emit('set-speed', speed);
     }, [speed]);
+
+    // ------------------------------------------------------------
+    // TUTORIAL (DRIVER.JS)
+    // ------------------------------------------------------------
+    useEffect(() => {
+        if (levelInfo?.id !== 1) return
+
+        const timer = setTimeout(() => {
+            const driverObj = driver({
+                ...TUTORIAL_CONFIG,
+                nextBtnText: t('tutorial.buttons.next'),
+                prevBtnText: t('tutorial.buttons.prev'),
+                doneBtnText: t('tutorial.buttons.done'),
+                steps: TUTORIAL_STEPS.map(step => ({
+                    ...step,
+                    popover: {
+                        ...step.popover,
+                        title: step.popover?.title ? t('tutorial.' + step.popover.title + '.title') : undefined,
+                        description: step.popover?.description ? t('tutorial.' + step.popover.title + '.description') : undefined
+                    }
+                }))
+            })
+
+            driverObj.drive()
+        }, 1000)
+
+        return () => clearTimeout(timer)
+    }, [levelInfo?.id])
+
 
     const getQueue = useCallback((slot: ProgramSlot) => {
         switch (slot) {
