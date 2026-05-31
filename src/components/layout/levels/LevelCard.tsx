@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router";
-import { CheckCircle2, Lock, UnlockIcon } from "lucide-react";
+import { Lock } from "lucide-react";
 import { t } from "i18next";
 
 interface LevelCardProps {
@@ -10,89 +10,92 @@ interface LevelCardProps {
 }
 
 export const LevelCard: React.FC<LevelCardProps> = ({ level, status, stars }) => {
+    const isLocked = status === "locked";
+    const isCompleted = status === "completed";
+
+    const cardStyles = {
+        // Retoque en la sombra activa para que sea un verde oscuro orgánico en lugar de negro puro
+        completed: "bg-lime-600 shadow-[0_4px_0_0_#335505] active:translate-y-[4px] active:shadow-[0_2px_0_0_#1c3002]",
+        unlocked: "bg-sky-600 shadow-[0_4px_0_0_#1d4ed8] active:translate-y-[4px] active:shadow-[0_2px_0_0_#1d4ed8]",
+        locked: "bg-slate-600 shadow-[0_4px_0_0_#334155] cursor-not-allowed brightness-60"
+    };
+
     return (
-        <div className="relative group">
-            {status !== "locked" && (
-                <div className="absolute inset-0 bg-linear-to-r from-accent-cyan/0 to-accent-purple/0 group-hover:from-accent-cyan/10 group-hover:to-accent-purple/10 rounded-md blur-md transition-all duration-300 pointer-events-none" />
+        <div className="relative w-32 h-32 pt-1.5 mx-auto select-none group">
+            {!isLocked && (
+                <div className="absolute inset-0 opacity-30 group-hover:opacity-65 transition-opacity duration-300 pointer-events-none" />
             )}
 
             <NavLink
-                to={status !== "locked" ? `/levels/${level}` : "#"}
-                onClick={(e) => status === "locked" && e.preventDefault()}
+                to={!isLocked ? `/levels/${level}` : "#"}
+                onClick={(e) => isLocked && e.preventDefault()}
                 className={`
-                                        relative flex flex-col  gap-2 p-2 h-37.5 w-full
-                                        bg-bg-secondary border rounded-sm overflow-hidden
-                                        transition-all duration-300 ease-out select-none
-                                        ${status !== "locked"
-                        ? 'border-border-custom/80 hover:border-accent-cyan/20 cursor-pointer active:scale-98 hover:shadow-[0_3px_10px_rgba(34,211,238,0.04)]'
-                        : 'border-border-custom/30 cursor-not-allowed'
-                    }
-                                    `}
+                    relative flex flex-col justify-between items-center p-2 pt-6 w-full h-full 
+                    rounded-xl overflow-hidden text-center text-white font-sans
+                    transition-all duration-150 ease-out select-none 
+                    ${cardStyles[status]}
+                    ${!isLocked ? "hover:brightness-135 cursor-pointer" : ""} 
+                `}
             >
-                {/* Capa de brillo reflectivo superior interna */}
-                {status !== "locked" && (
-                    <div className="absolute inset-x-0 top-0 h-[2px] bg-linear-to-r from-transparent via-accent-cyan/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {!isLocked && (
+                    <div className="absolute inset-x-0 top-0 h-[35%] bg-linear-to-b from-white/20 to-transparent pointer-events-none" />
                 )}
 
-
-                <span className="font-jetbrains text-[10px] text-center font-bold text-text-muted tracking-wider uppercase">
-                    SEC_0{level}
+                {/* Retoque: Template literal limpio para la traducción */}
+                <span className={`absolute top-1.5 left-1.5 text-[9px] font-black uppercase tracking-widest font-sans 
+                                rounded-full px-2.5 py-0.5 min-w-[65px] border border-white/10 shadow-sm
+                                ${status === 'locked' ? 'bg-black/40 text-slate-400' : status === 'completed' ? 'bg-lime-900/90 text-lime-200' : 'bg-sky-900/90 text-sky-200'}`}>
+                    {t(`levels.status.${status}`)}
                 </span>
 
+                <div className="relative flex items-center justify-center w-full my-auto">
+                    {isLocked ? (
+                        <div className="p-2.5 bg-black/20 rounded-full border border-white/10 ">
+                            <Lock size={21} className="text-slate-300 drop-shadow-[0_2px_0_rgba(0,0,0,0.4)]" strokeWidth={3} />
+                        </div>
+                    ) : (
+                        <div className={`w-10 h-10 rounded-full bg-linear-to-b from-black/10 to-black/30 border-2 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-200 ${isCompleted ? 'border-lime-700' : 'border-sky-700'}`}>
+                            <span className="text-2xl font-black tracking-tight font-sans drop-shadow-[0_2px_0_rgba(0,0,0,0.6)]">
+                                {level}
+                            </span>
+                        </div>
+                    )}
+                </div>
 
-                {/* Contenedor de Estrellas Original e Idéntico en Estructura */}
-                <div className="relative flex justify-center">
-                    {/* Fondo apagado original */}
-                    <div className="flex gap-1 text-xl">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className={`scale-90 opacity-15 grayscale brightness-50 ${i !== 1 ? 'pt-2' : ''}`}>
-                                ⭐
-                            </div>
-                        ))}
-                    </div>
-                    {/* Estrellas activas originales con tu clase .star-animate intacta */}
-                    <div className="absolute inset-0 flex justify-center gap-1 text-xl drop-shadow-[0_0_12px_rgba(250,204,21,0.35)]">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className="star-animate"
-                                style={{ opacity: i < stars ? 1 : 0 }}
-                            >
-                                <div  >
+                {/* CONTENEDOR DE ESTRELLAS OPTIMIZADO */}
+                <div className="w-full bg-black/20 backdrop-blur-xs rounded-xl pt-1.5 pb-2 px-2 flex justify-center items-center shadow-inner border border-white/5">
+                    <div className="flex gap-1.5 items-center justify-center h-4">
+                        {[0, 1, 2].map((i) => {
+                            const isActive = i < stars;
+                            const isCenter = i === 1;
+
+                            const animationClass = isActive ? "star-animate" : "";
+
+                            // MEJORA: Si la estrella NO está activa, no se levanta ni se desfasa (mantiene alineación plana y ordenada)
+                            const centerClass = isCenter && isActive ? "text-base scale-120 mx-0.5" : "text-sm";
+                            const sideClass = !isCenter && isActive ? "pt-3" : "";
+
+                            return (
+                                <span
+                                    key={i}
+                                    className={`
+                                        transition-all duration-300 transform
+                                        ${animationClass}
+                                        ${centerClass}
+                                        ${sideClass}
+                                        ${isActive
+                                            ? "opacity-100 drop-shadow-[0_0_6px_#f59e0b] filter brightness-110"
+                                            : "opacity-15 grayscale scale-85 pointer-events-none"
+                                        }
+                                    `}
+                                >
                                     ⭐
-                                </div>
-                            </div>
-                        ))}
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Bloque Inferior: Nombre del Nivel */}
-                <div className="text-center">
-                    <h3 className={`font-outfit font-black text-xs h-8 tracking-wide uppercase transition-colors duration-300 ${status !== "locked" ? 'text-text-primary group-hover:text-accent-cyan' : 'text-text-muted'}`}>
-                        {t(`levels.${level}.name`)}
-                    </h3>
-                </div>
-
-                {/* Bloque Superior: Identificador Técnico y Estado */}
-                <div className="flex items-center justify-center w-full">
-
-                    {/* Iconografía de Estado */}
-                    {status === "completed" && (
-                        <div className="flex items-center justify-center gap-1 text-accent-green font-jetbrains text-[9px] font-bold tracking-wider">
-                            <CheckCircle2 size={16} strokeWidth={2.5} />
-                        </div>
-                    )}
-                    {status === "unlocked" && (
-                        <div className="flex items-center justify-center gap-1 text-accent-cyan font-jetbrains text-[9px] font-bold tracking-wider animate-pulse">
-                            <UnlockIcon size={16} strokeWidth={2.5} />
-                        </div>
-                    )}
-                    {status === "locked" && (
-                        <div className="flex items-center justify-center gap-1 text-text-muted font-jetbrains text-[9px] font-bold tracking-wider">
-                            <Lock size={16} className="text-text-muted" strokeWidth={2.5} />
-                        </div>
-                    )}
-                </div>
             </NavLink>
         </div>
     );

@@ -50,36 +50,24 @@ export default function Home() {
                     Un paso a la vez. Piensa la lógica, ordena tus comandos y supera los obstáculos para encontrar la ruta perfecta hacia la meta.
                 </p>
 
-                {/*  BOTÓN: Concepto "Overdrive Neon" Responsivo */}
-                <div className="relative w-full sm:w-auto inline-block group">
-                    {/* Capa trasera de Glow */}
-                    <div className="absolute inset-0 bg-linear-to-r from-accent-green to-accent-cyan rounded-xl opacity-20 blur-md transition-all duration-300 group-hover:opacity-60 group-hover:blur-xl" />
-
-                    <NavLink
-                        to="/levels"
-                        className="
-                            relative flex items-center justify-center gap-3 sm:gap-4 px-8 sm:px-14 py-4 sm:py-5 w-full sm:w-auto
-                            font-outfit font-black text-lg sm:text-2xl tracking-wider text-text-primary uppercase
-                            bg-bg-secondary border border-accent-green/40 rounded-xl
-                            overflow-hidden transition-all duration-300 ease-out
-                            
-                            hover:border-accent-cyan hover:text-white
-                            hover:shadow-[0_0_30px_rgba(34,211,238,0.25),inset_0_0_15px_rgba(52,211,153,0.15)]
-                            active:scale-98
-                        "
-                    >
-                        {/* Fondo interno con degradado en hover */}
-                        <div className="absolute inset-0 bg-linear-to-r from-accent-green/10 to-accent-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                        {/* Línea de escaneo láser */}
-                        <div className="absolute inset-x-0 top-0 h-[2px] bg-linear-to-r from-transparent via-accent-cyan to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                        <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-accent-green stroke-accent-green transition-transform duration-300 group-hover:scale-110 group-hover:fill-accent-cyan group-hover:stroke-accent-cyan" />
-                        <span className="text-sm sm:text-2xl font-black tracking-wide bg-linear-to-r from-text-primary to-text-primary group-hover:from-accent-green group-hover:to-accent-cyan bg-clip-text text-transparent transition-all duration-300">
-                            INICIAR EXPEDICIÓN
-                        </span>
-                    </NavLink>
-                </div>
+                {/*  BOTÓN: Estilo simplificado similar a Button accent */}
+                <NavLink
+                    to="/levels"
+                    className="
+                        relative flex items-center justify-center gap-3 sm:gap-4 px-8 sm:px-14 py-4 sm:py-5 w-full sm:w-auto
+                        font-outfit font-black text-lg sm:text-2xl tracking-wider text-accent-cyan uppercase
+                        bg-accent-cyan/10 border border-accent-cyan/30 rounded-sm border-b-4
+                        overflow-hidden transition-all duration-200 ease-out
+                        hover:bg-accent-cyan/20 hover:border-accent-cyan hover:border-b-4 hover:translate-y-[-2px]
+                        hover:shadow-[0_0_16px_rgba(34,211,238,0.4)]
+                        active:translate-y-[2px] active:border-b-2
+                    "
+                >
+                    <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-accent-cyan stroke-accent-cyan transition-transform duration-200 group-hover:scale-110" />
+                    <span className="text-sm sm:text-2xl font-black tracking-wide">
+                        INICIAR
+                    </span>
+                </NavLink>
 
             </div>
 
