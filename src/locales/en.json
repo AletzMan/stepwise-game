@@ -59,9 +59,9 @@
       "subtitle": "Select a sector to start",
       "back": "HOME",
       "status": {
-        "done": "DONE",
+        "completed": "!DONE!",
         "locked": "LOCKED",
-        "unlocked": "UNLOCKED"
+        "unlocked": "PLAY"
       },
       "1": {
         "name": "First Steps",
@@ -70,6 +70,10 @@
       "2": {
         "name": "Climbing Up",
         "description": "Use JUMP to reach higher ground. Use F1 to save steps!"
+      },
+      "3": {
+        "name": "Turn Around",
+        "description": "Turn around and walk forward. Use F1 to save steps!"
       }
     },
     "errors": {
@@ -78,6 +82,17 @@
       "Path is blocked by an obstacle!": "Path is blocked by an obstacle!",
       "Cannot walk: height difference detected!": "Cannot walk: height difference detected!",
       "Cannot jump: height difference must be exactly 1 level!": "Cannot jump: height difference must be exactly 1 level!"
+    },
+    "tutorial": {
+      "buttons": {
+        "next": "CONTINUE",
+        "prev": "BACK",
+        "done": "DONE"
+      },
+      "welcome": {
+        "title": "Welcome",
+        "description": "Welcome to Stepwise, a logic and programming game to learn to program in a fun way."
+      }
     }
   }
 }

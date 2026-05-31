@@ -59,17 +59,18 @@
       "subtitle": "Selecciona un sector para comenzar",
       "back": "INICIO",
       "status": {
-        "done": "COMPLETADO",
+        "completed": "!HECHO!",
         "locked": "BLOQUEADO",
-        "unlocked": "DESBLOQUEADO"
+        "unlocked": "JUGAR"
       },
       "1": {
-        "name": "Primeros Pasos",
         "description": "Camina hacia adelante y activa las casillas objetivo. ¡Simple!"
       },
-      "2": {
-        "name": "Subiendo",
+      "2": { 
         "description": "Usa SALTAR para llegar a terreno más alto. ¡Usa F1 para ahorrar pasos!"
+      },
+      "3": { 
+        "description": "Gira y camina hacia adelante. ¡Usa F1 para ahorrar pasos!"
       }
     },
     "errors": {
@@ -78,6 +79,17 @@
       "Path is blocked by an obstacle!": "¡El camino está bloqueado por un obstáculo!",
       "Cannot walk: height difference detected!": "¡No se puede caminar: se detectó diferencia de altura!",
       "Cannot jump: height difference must be exactly 1 level!": "¡No se puede saltar: la diferencia de altura debe ser de exactamente 1 nivel!"
+    },
+    "tutorial": {
+      "buttons": {
+        "next": "CONTINUAR",
+        "prev": "REGRESAR",
+        "done": "LISTO"
+      },
+      "welcome": {
+        "title": "Bienvenido",
+        "description": "Bienvenido a Stepwise, Juego de lógica y programación para aprender a programar de forma divertida."
+      }
     }
   }
 }

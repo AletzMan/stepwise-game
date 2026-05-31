@@ -16,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
     const navigate = useNavigate();
 
     return (
-        <header className="relative flex items-center justify-between gap-1 py-2 px-2 bg-linear-to-r from-bg-secondary via-bg-primary/90 to-bg-secondary rounded-sm border border-border-custom min-h-[58px] select-none">
+        <header id="header" className="relative flex items-center justify-between gap-1 py-2 px-2 bg-linear-to-r from-bg-secondary via-bg-primary/90 to-bg-secondary rounded-sm border border-border-custom min-h-[58px] select-none">
             {/* Línea decorativa sutil inferior de tecnología */}
             <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-accent-cyan/30 to-transparent" />
 
@@ -42,11 +42,8 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
             <div className="flex items-center justify-center w-full">
                 {levelInfo && (
                     <div className="flex flex-col md:flex-row max-md:w-40 items-center gap-3 py-1 max-md:py-2 md:px-4 bg-linear-to-r from-accent-cyan/5 via-accent-cyan/10 to-accent-cyan/5 border-x border-accent-cyan/30 rounded-md shadow-[inset_0_0_10px_rgba(34,211,238,0.05)]">
-                        <span className="font-jetbrains text-[0.7rem] text-center font-black text-accent-cyan uppercase tracking-[0.15em] max-md:border-b md:border-r border-accent-cyan/20 md:pr-3">
+                        <span className="font-jetbrains text-[1rem] text-center font-black text-accent-cyan uppercase tracking-[0.15em]">
                             {t('header.level', { id: levelInfo.id })}
-                        </span>
-                        <span className="font-outfit text-sm font-bold text-text-primary tracking-wide pl-1">
-                            {t(`levels.${levelInfo.id}.name`, { defaultValue: levelInfo.name })}
                         </span>
                     </div>
                 )}
