@@ -7,27 +7,28 @@ import LevelCompleteModal from '../components/layout/LevelCompleteModal';
 import '@fontsource/titan-one';
 import Button from '../components/ui/Button';
 import CommandButton from '../components/ui/CommandButton';
-import { Play, Square, ArrowUp, CornerUpLeft, CornerUpRight, ArrowRight, Pickaxe, Box, EraserIcon } from 'lucide-react';
+import { Play, Square, EraserIcon } from 'lucide-react';
 import LevelErrorModal from '../components/layout/LevelErrorModel';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useGameStore } from '../store/gameStore';
-import { driver } from 'driver.js';
-import { TUTORIAL_CONFIG, TUTORIAL_STEPS } from '../game/data/tutorialStep';
+import { driver, DriveStep } from 'driver.js';
+import { TUTORIAL_CONFIG, TUTORIAL_STEPS_LVL1, TUTORIAL_STEPS_LVL11 } from '../game/data/tutorialStep';
+import { COMMAND_CONFIG } from '../game/data/constants';
+import { ProgramSlot } from '../game/types/game';
+import SortableCommand from '../components/levels/SortableCommand';
+import { DragDropProvider } from '@dnd-kit/react';
+import { move } from '@dnd-kit/helpers';
 
-const COMMAND_CONFIG: Record<Command, { label: string; icon: React.ReactNode; color: string }> = {
-    WALK: { label: 'Walk', icon: <ArrowRight size={16} strokeWidth={3} />, color: '#94a3b8' },
-    JUMP: { label: 'Jump', icon: <ArrowUp size={16} strokeWidth={3} />, color: '#38bdf8' },
-    TURN_LEFT: { label: 'Left', icon: <CornerUpLeft size={16} strokeWidth={3} />, color: '#fbbf24' },
-    TURN_RIGHT: { label: 'Right', icon: <CornerUpRight size={16} strokeWidth={3} />, color: '#fb923c' },
-    ACTIVATE: { label: 'Pick', icon: <Pickaxe size={16} strokeWidth={0} fill='currentColor' />, color: '#7ccf00' },
-    F1: { label: 'F1', icon: <Box size={16} strokeWidth={3} />, color: '#f472b6' },
-    F2: { label: 'F2', icon: <Box size={16} strokeWidth={3} />, color: '#a78bfa' },
-    F3: { label: 'F3', icon: <Box size={16} strokeWidth={3} />, color: '#2dd4bf' },
-};
+export interface QueueItem {
+    id: number;
+    cmd: Command;
+}
 
-
-type ProgramSlot = 'main' | 'f1' | 'f2' | 'f3';
+let _queueIdCounter = 0;
+function nextQueueId() {
+    return _queueIdCounter++;
+}
 
 export function Level() {
     const location = useLocation();
@@ -35,10 +36,10 @@ export function Level() {
     const { t } = useTranslation();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [levelInfo, setLevelInfo] = useState<LevelData | null>(null);
-    const [mainQueue, setMainQueue] = useState<Command[]>([]);
-    const [f1Queue, setF1Queue] = useState<Command[]>([]);
-    const [f2Queue, setF2Queue] = useState<Command[]>([]);
-    const [f3Queue, setF3Queue] = useState<Command[]>([]);
+    const [mainQueue, setMainQueue] = useState<QueueItem[]>([]);
+    const [f1Queue, setF1Queue] = useState<QueueItem[]>([]);
+    const [f2Queue, setF2Queue] = useState<QueueItem[]>([]);
+    const [f3Queue, setF3Queue] = useState<QueueItem[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const [activeSlot, setActiveSlot] = useState<ProgramSlot>('main');
     const [executionStack, setExecutionStack] = useState<{ slot: ProgramSlot; index: number }[]>([]);
@@ -59,6 +60,9 @@ export function Level() {
         }
         if (status.startsWith('error:')) {
             const err = status.substring(6);
+            console.log(status);
+            console.log(t(`errors.${err}`));
+            console.log(err);
             return t('app.error_prefix', { message: t(`errors.${err}`, { defaultValue: err }) });
         }
         if (status === 'running') {
@@ -92,12 +96,10 @@ export function Level() {
             setIsRunning(true);
             setStatusMessage('running');
             setStatusType('info');
-            executedCommands.current = 0;
             setExecutionStack([]);
         };
 
         const onExecutionStep = (data: { command: Command; index: number; depth: number; stack?: { slot: ProgramSlot; index: number }[] }) => {
-            executedCommands.current++;
             if (data.stack) {
                 setExecutionStack(data.stack);
             }
@@ -174,7 +176,16 @@ export function Level() {
     // TUTORIAL (DRIVER.JS)
     // ------------------------------------------------------------
     useEffect(() => {
-        if (levelInfo?.id !== 1) return
+        const currentLevel = levels.find(l => l.id === levelInfo?.id);
+        if (currentLevel?.status !== 'locked' || (currentLevel?.id !== 11 && currentLevel?.id !== 1)) return
+
+        let steps: DriveStep[] = []
+        if (currentLevel?.id === 1) {
+            steps = TUTORIAL_STEPS_LVL1
+        }
+        else if (currentLevel?.id === 11) {
+            steps = TUTORIAL_STEPS_LVL11
+        }
 
         const timer = setTimeout(() => {
             const driverObj = driver({
@@ -182,12 +193,12 @@ export function Level() {
                 nextBtnText: t('tutorial.buttons.next'),
                 prevBtnText: t('tutorial.buttons.prev'),
                 doneBtnText: t('tutorial.buttons.done'),
-                steps: TUTORIAL_STEPS.map(step => ({
+                steps: steps.map(step => ({
                     ...step,
                     popover: {
                         ...step.popover,
-                        title: step.popover?.title ? t('tutorial.' + step.popover.title + '.title') : undefined,
-                        description: step.popover?.description ? t('tutorial.' + step.popover.title + '.description') : undefined
+                        title: step.popover?.title ? t('tutorial.' + levelInfo?.id + '.' + step.popover.title + '.title') : undefined,
+                        description: step.popover?.title ? t('tutorial.' + levelInfo?.id + '.' + step.popover.title + '.description') : undefined
                     }
                 }))
             })
@@ -199,7 +210,7 @@ export function Level() {
     }, [levelInfo?.id])
 
 
-    const getQueue = useCallback((slot: ProgramSlot) => {
+    const getQueue = useCallback((slot: ProgramSlot): QueueItem[] => {
         switch (slot) {
             case 'main': return mainQueue;
             case 'f1': return f1Queue;
@@ -218,7 +229,7 @@ export function Level() {
         }
     }, [levelInfo, location.pathname]);
 
-    const setQueue = useCallback((slot: ProgramSlot, queue: Command[]) => {
+    const setQueue = useCallback((slot: ProgramSlot, queue: QueueItem[]) => {
         switch (slot) {
             case 'main': setMainQueue(queue); break;
             case 'f1': setF1Queue(queue); break;
@@ -232,7 +243,7 @@ export function Level() {
         const queue = getQueue(activeSlot);
         const maxSlots = getMaxSlots(activeSlot);
         if (queue.length < maxSlots) {
-            setQueue(activeSlot, [...queue, cmd]);
+            setQueue(activeSlot, [...queue, { id: nextQueueId(), cmd }]);
         }
     };
 
@@ -263,11 +274,14 @@ export function Level() {
 
     const handleRun = () => {
         if (isRunning || mainQueue.length === 0) return;
+
+        executedCommands.current = mainQueue.length + f1Queue.length + f2Queue.length + f3Queue.length;
+
         EventBus.emit('run-program', {
-            main: mainQueue,
-            f1: f1Queue,
-            f2: f2Queue,
-            f3: f3Queue,
+            main: mainQueue.map(item => item.cmd),
+            f1: f1Queue.map(item => item.cmd),
+            f2: f2Queue.map(item => item.cmd),
+            f3: f3Queue.map(item => item.cmd),
         });
     };
 
@@ -376,6 +390,7 @@ export function Level() {
 
         return (
             <div
+                id={`queue-${slot}`}
                 className={`p-3 bg-bg-secondary/60 border rounded-sm cursor-pointer transition-all duration-300 select-none queue-sec-hover
                 ${isActive
                         ? 'border-(--queue-color)/40 bg-linear-to-b from-bg-secondary to-bg-tertiary/80 shadow-[0_4px_20px_-5px_color-mix(in_srgb,var(--queue-color)_15%,transparent)]'
@@ -411,44 +426,32 @@ export function Level() {
                 </div>
 
                 {/* Grilla de Slots */}
-                <div className="flex flex-wrap gap-1.5 p-1 bg-black/15 border border-black/10 rounded-md">
-                    {Array.from({ length: maxSlots }).map((_, i) => {
-                        const cmd = queue[i];
-                        const isHighlighted = isRunning && executionStack.some(frame => frame.slot === slot && frame.index === i);
+                <DragDropProvider
+                    onDragEnd={(event) => {
+                        if (isRunning) return;
+                        setQueue(slot, move(queue, event));
+                    }}
+                >
+                    <div className="flex flex-wrap gap-1.5 p-1 bg-black/15 border border-black/10 rounded-md">
+                        {Array.from({ length: maxSlots }).map((_, i) => {
+                            const item = queue[i];
+                            const isHighlighted = isRunning && executionStack.some(frame => frame.slot === slot && frame.index === i);
 
-                        return (
-                            <div
-                                key={i}
-                                className={`w-9 h-9 flex items-center justify-center rounded-sm transition-all duration-200 relative cursor-pointer
-                                ${cmd
-                                        ? 'bg-(--cmd-color)/5 border border-b-[3px] border-(--cmd-color)/20 cmd-btn-hover active:translate-y-px active:border-b'
-                                        : 'bg-black/20 border border-dashed border-(--queue-color)/25 hover:border-(--queue-color)/30'
-                                    } 
-                                ${isHighlighted
-                                        ? 'animate-pulse-glow border-(--cmd-color)! bg-linear-to-t from-(--cmd-color)/15 to-transparent scale-105 z-10 shadow-[0_0_15px_color-mix(in_srgb,var(--cmd-color)_40%,transparent)]'
-                                        : isRunning && 'grayscale opacity-40 scale-95'
-                                    }`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (cmd && !isRunning) removeCommand(slot, i);
-                                }}
-                                style={cmd ? { '--cmd-color': COMMAND_CONFIG[cmd].color } as React.CSSProperties : {}}
-                            >
-                                {/* Reflejo cristalino sutil si el slot tiene un comando */}
-                                {cmd && (
-                                    <div className="absolute inset-x-0 top-0 h-[35%] bg-white/5 rounded-t-sm pointer-events-none" />
-                                )}
-
-                                {cmd ? (
-                                    <span className="slot-icon text-lg text-(--cmd-color) leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110">
-                                        {COMMAND_CONFIG[cmd].icon} </span>
-                                ) : (
-                                    <span className="text-md font-semibold text-(--queue-color)/30 select-none transition-colors group-hover:text-text-muted/40">+</span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                            return (
+                                <SortableCommand
+                                    key={item ? item.id : `empty-${i}`}
+                                    index={i}
+                                    id={item ? item.id : -(i + 1)}
+                                    cmd={item?.cmd}
+                                    slot={slot}
+                                    isRunning={isRunning}
+                                    isHighlighted={isHighlighted}
+                                    removeCommand={removeCommand}
+                                />
+                            );
+                        })}
+                    </div>
+                </DragDropProvider>
             </div>
         );
     };
@@ -472,6 +475,7 @@ export function Level() {
                         setShowStatusLevel={setShowStatusLevel}
                         setStatusType={setStatusType}
                         handleLoadLevel={handleLoadLevel}
+                        handleResetLevel={handleReset}
                     />
                 )}
 
@@ -481,7 +485,8 @@ export function Level() {
                         message={getStatusText(statusMessage)}
                         show={showErrorLevel}
                         setShowStatusLevel={setShowStatusLevel}
-                        handleRetryLevel={() => handleLoadLevel(levelInfo?.id || 0)}
+                        handleRetryLevel={handleReset}
+                        handleRestartLevel={() => handleLoadLevel(levelInfo?.id || 0)}
                         onGoToMenu={() => navigate('/levels')}
                     />
                 )}
@@ -489,7 +494,7 @@ export function Level() {
                 {/* Contenido principal */}
                 <div className="flex flex-col min-[901px]:flex-row gap-2 flex-1 min-h-0">
                     {/* Lienzo de Phaser (Canvas) */}
-                    <div className="flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary flex items-center justify-center max-[900px]:min-h-[300px]">
+                    <div id="phaser-canvas" className="flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary flex items-center justify-center max-[900px]:min-h-[300px]">
                         <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
                     </div>
 
@@ -497,7 +502,7 @@ export function Level() {
                     <div className="w-[325px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
 
                         {/* Paleta de comandos */}
-                        <div className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
+                        <div id="command-palette" className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
                             <div className="font-jetbrains text-[0.65rem] font-semibold uppercase tracking-[2px] text-text-muted mb-2.5">
                                 {t('app.commands_title')}
                             </div>
@@ -536,7 +541,7 @@ export function Level() {
                                 <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
                                     {t('app.speed')}
                                 </span>
-                                <div className="flex gap-1">
+                                <div id="speed-buttons" className="flex gap-1">
                                     {[0.5, 1, 2].map(s => (
                                         <Button
                                             key={s}
@@ -551,7 +556,7 @@ export function Level() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="flex gap-3 p-1 bg-black/10 border border-border-custom/20 rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                            <div id="control-buttons" className="flex gap-3 p-1 bg-black/10 border border-border-custom/20 rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                                 {!isRunning ? (
                                     <Button
                                         intent="solid"
@@ -582,7 +587,7 @@ export function Level() {
                                     color="yellow"
                                     size="md"
                                     className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
-                                    onClick={handleReset}
+                                    onClick={() => handleLoadLevel(levelInfo?.id ?? 1)}
                                 >
                                     <EraserIcon size={18} strokeWidth={3} />
                                     <span>{t('app.btn_clear')}</span>

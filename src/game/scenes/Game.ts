@@ -72,7 +72,7 @@ export class Game extends Scene {
 
         EventBus.on('reset-level', () => {
             if (this.currentLevel) {
-                this.resetRobotPosition();
+                this.resetExplorerPosition();
                 this.isRunning = false;
             }
         });
@@ -195,7 +195,7 @@ export class Game extends Scene {
         if (this.isRunning || this.introAnimating) return;
 
         // Reiniciar el estado del nivel sin volver a cargar los elementos visuales
-        this.resetRobotPosition();
+        this.resetExplorerPosition();
 
         this.isRunning = true;
         this.shouldStop = false;
@@ -434,7 +434,7 @@ export class Game extends Scene {
         this.updateRotation();
     }
 
-    resetRobotPosition() {
+    resetExplorerPosition() {
         if (!this.currentLevel) return;
 
         const level = this.currentLevel;

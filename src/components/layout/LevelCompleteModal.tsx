@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../ui/Button';
-import { ChevronRight, LayoutGrid, RotateCcw } from 'lucide-react';
+import { ChevronRight, LayoutGrid, RotateCcw, RefreshCw } from 'lucide-react';
 import { LevelData } from '../../game/levels';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -13,10 +13,11 @@ interface LevelCompleteModalProps {
     setShowStatusLevel: (show: boolean) => void;
     setStatusType: (type: 'info' | 'success' | 'error') => void;
     handleLoadLevel: (id: number) => void;
+    handleResetLevel: () => void;
 }
 
 const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
-    levelInfo, statusType, stars, executedCommands, setShowStatusLevel, setStatusType, handleLoadLevel
+    levelInfo, statusType, stars, executedCommands, setShowStatusLevel, setStatusType, handleLoadLevel, handleResetLevel
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -136,11 +137,20 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                                 color="orange"
                                 className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                 onClick={() => {
-                                    handleLoadLevel(levelInfo!.id);
-
+                                    handleResetLevel();
                                 }}
                             >
                                 <RotateCcw size={20} strokeWidth={2.5} />
+                            </Button>
+                            <Button
+                                intent="solid"
+                                color="red"
+                                className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                onClick={() => {
+                                    handleLoadLevel(levelInfo!.id);
+                                }}
+                            >
+                                <RefreshCw size={20} strokeWidth={2.5} />
                             </Button>
                         </div>
                     </div>

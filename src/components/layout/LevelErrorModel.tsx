@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../ui/Button';
-import { RotateCcw, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { RotateCcw, AlertTriangle, LayoutGrid, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface LevelErrorModalProps {
@@ -8,6 +8,7 @@ interface LevelErrorModalProps {
     show: boolean;
     setShowStatusLevel: (show: boolean) => void;
     handleRetryLevel: () => void;
+    handleRestartLevel: () => void;
     // Si manejas un estado para regresar al menú/niveles
     onGoToMenu?: () => void;
 }
@@ -17,6 +18,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
     show,
     setShowStatusLevel,
     handleRetryLevel,
+    handleRestartLevel,
     onGoToMenu
 }) => {
     const { t } = useTranslation();
@@ -80,21 +82,35 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                             <span>{t('modals.level_error.btn_retry')}</span>
                         </Button>
 
-                        {/* Botón secundario para volver al selector si se rinden */}
-                        {onGoToMenu && (
+                        <div className="flex gap-2.5">
+                            {/* Botón secundario para volver al selector si se rinden */}
+                            {onGoToMenu && (
+                                <Button
+                                    intent="solid"
+                                    color="purple"
+                                    className="flex-1 h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                    onClick={() => {
+                                        setShowStatusLevel(false);
+                                        onGoToMenu();
+                                    }}
+                                >
+                                    <LayoutGrid size={18} strokeWidth={2.5} />
+                                    <span>{t('modals.level_error.btn_select_level')}</span>
+                                </Button>
+                            )}
                             <Button
                                 intent="solid"
-                                color="purple"
-                                className="w-full h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                color="red"
+                                className="flex-1 h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                                 onClick={() => {
                                     setShowStatusLevel(false);
-                                    onGoToMenu();
+                                    handleRestartLevel();
                                 }}
                             >
-                                <LayoutGrid size={18} strokeWidth={2.5} />
-                                <span>{t('modals.level_error.btn_select_level')}</span>
+                                <RefreshCw size={18} strokeWidth={2.5} />
+                                <span>{t('modals.level_error.btn_restart', { defaultValue: 'Restart' })}</span>
                             </Button>
-                        )}
+                        </div>
                     </div>
 
                 </div>
