@@ -2,26 +2,28 @@ import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
 import { Command, LevelData, TileInfo, TILE, BLOCKED_TILES, getLevel } from '../levels';
+import { ERRORS } from '../data/errors';
 
 const HEIGHT_STEP = 16;
 
 export class Game extends Scene {
-    robotPos: { x: number; y: number; z: number };
+    explorerPos: { x: number; y: number; z: number };
     direction: number;
     isRunning: boolean;
     shouldStop: boolean;
-    robot: Phaser.GameObjects.Sprite;
+    explorer: Phaser.GameObjects.Sprite;
     shadow: Phaser.GameObjects.Ellipse;
     goalTiles: Set<string>;
     activatedGoals: Set<string>;
     currentLevel: LevelData | null;
-    mapObjects: Phaser.GameObjects.Image[];
+    mapObjects: Phaser.GameObjects.GameObject[];
     executionSpeed: number;
     idleFloatingTween: Phaser.Tweens.Tween | null;
+    introAnimating: boolean;
 
     constructor() {
         super('Game');
-        this.robotPos = { x: 0, y: 0, z: 0 };
+        this.explorerPos = { x: 0, y: 0, z: 0 };
         this.direction = 0;
         this.isRunning = false;
         this.shouldStop = false;
@@ -31,10 +33,11 @@ export class Game extends Scene {
         this.mapObjects = [];
         this.executionSpeed = 0.5;
         this.idleFloatingTween = null;
+        this.introAnimating = false;
     }
 
     preload() {
-        this.load.spritesheet('robot', '/assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
+        this.load.spritesheet('explorer', '/assets/sprite-sheet.png', { frameWidth: 64, frameHeight: 96 });
         this.load.spritesheet('tiles', '/assets/tiles.png', { frameWidth: 64, frameHeight: 96 });
     }
 
@@ -69,14 +72,15 @@ export class Game extends Scene {
 
         EventBus.on('reset-level', () => {
             if (this.currentLevel) {
-                this.loadLevel(this.currentLevel.id);
+                this.resetRobotPosition();
+                this.isRunning = false;
             }
         });
 
         EventBus.on('set-speed', (speed: number) => {
             this.executionSpeed = speed;
-            if (this.robot && this.robot.anims) {
-                this.robot.anims.timeScale = speed;
+            if (this.explorer && this.explorer.anims) {
+                this.explorer.anims.timeScale = speed;
             }
         });
 
@@ -114,16 +118,16 @@ export class Game extends Scene {
         this.mapObjects = [];
         this.goalTiles = new Set();
 
-        // Destruir el robot existente si está presente
-        if (this.robot) {
-            this.robot.destroy();
+        // Destruir el explorer existente si está presente
+        if (this.explorer) {
+            this.explorer.destroy();
         }
         if (this.shadow) {
             this.shadow.destroy();
         }
 
-        // Configurar la posición del robot
-        this.robotPos = {
+        // Configurar la posición del explorer
+        this.explorerPos = {
             x: level.startPos.x,
             y: level.startPos.y,
             z: level.map[level.startPos.y][level.startPos.x].h,
@@ -134,34 +138,50 @@ export class Game extends Scene {
         this.goalTiles = new Set();
 
         // Crear el mapa
-        this.createMap(level.map);
+        // Crear el mapa con animación de bloques cayendo
+        const introDuration = this.createMap(level.map, true);
 
 
-        // Crear el robot
-        const startPos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
+        // Crear el explorer (oculto inicialmente para la animación de intro)
+        const startPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
 
         this.shadow = this.add.ellipse(startPos.x, startPos.y, 24, 12, 0x000000, 0.25);
-        this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1).setOrigin(0.55, -0.78);
+        this.shadow.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1).setOrigin(0.55, -0.78);
+        this.shadow.setAlpha(0);
 
-        this.robot = this.add.sprite(startPos.x, startPos.y, 'robot').setOrigin(0.55, 0.68);
-        this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
-        this.robot.setScale(0.55);
+        this.explorer = this.add.sprite(startPos.x, startPos.y, 'explorer').setOrigin(0.55, 0.68);
+        this.explorer.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1);
+        this.explorer.setScale(0.55);
+        this.explorer.setAlpha(0);
 
         // Reproducir la animación de reposo (idle)
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
         const idleFrame = this.direction * 4;
-        this.robot.setFrame(idleFrame);
-        this.robot.play(`idle-${dirKey}`, true);
-        if (this.robot.anims) {
-            this.robot.anims.timeScale = this.executionSpeed;
+        this.explorer.setFrame(idleFrame);
+        this.explorer.play(`idle-${dirKey}`, true);
+        if (this.explorer.anims) {
+            this.explorer.anims.timeScale = this.executionSpeed;
         }
 
+        // Mostrar explorer y sombra después de que los bloques terminen de caer
+        this.introAnimating = true;
+        this.time.delayedCall(introDuration, () => {
+            if (this.explorer && this.explorer.active) {
+                this.tweens.add({
+                    targets: [this.explorer, this.shadow],
+                    alpha: 1,
+                    duration: 350,
+                    ease: 'Quad.easeOut',
+                });
+            }
+            this.introAnimating = false;
+        });
 
         this.shouldStop = false; // Permitir una nueva ejecución
 
         EventBus.emit('level-loaded', {
             id: level.id,
-            name: level.name,
+            name: `Level ${level.id}`,
             description: level.description,
             availableCommands: level.availableCommands,
             mainSlots: level.mainSlots,
@@ -172,7 +192,7 @@ export class Game extends Scene {
     }
 
     async runProgram(main: Command[], f1: Command[], f2: Command[], f3: Command[]) {
-        if (this.isRunning) return;
+        if (this.isRunning || this.introAnimating) return;
 
         // Reiniciar el estado del nivel sin volver a cargar los elementos visuales
         this.resetRobotPosition();
@@ -187,7 +207,12 @@ export class Game extends Scene {
             const z = this.currentLevel!.map[y][x].h;
             const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
             if (block) {
-                block.setFrame(TILE.BLUE);
+                block.setFrame(this.currentLevel!.map[y][x].t);
+                if (this.currentLevel!.map[y][x].t === TILE.BLUE) {
+                    this.updateGoalBeam(x, y, z, 0x00aaff);
+                } else {
+                    this.updateGoalBeam(x, y, z, null);
+                }
             }
         }
 
@@ -280,15 +305,29 @@ export class Game extends Scene {
             case 'ACTIVATE':
                 await this.executeActivate();
                 break;
+            case 'PICK':
+                await this.executePick();
+                break;
         }
+    }
+
+    getValidFloorHeights(tileInfo: TileInfo): number[] {
+        if (tileInfo.t === TILE.WOOD && tileInfo.h > 0) {
+            if (tileInfo.h >= 2) {
+                return [0, tileInfo.h];
+            } else {
+                return [tileInfo.h];
+            }
+        }
+        return [tileInfo.h];
     }
 
     async executeMovement(type: 'WALK' | 'JUMP') {
         if (!this.currentLevel || this.shouldStop) return;
 
         const map = this.currentLevel.map;
-        let nextX = this.robotPos.x;
-        let nextY = this.robotPos.y;
+        let nextX = this.explorerPos.x;
+        let nextY = this.explorerPos.y;
 
         if (this.direction === 0) nextX++;
         else if (this.direction === 1) nextY++;
@@ -297,49 +336,84 @@ export class Game extends Scene {
 
         // Validate bounds
         if (nextX < 0 || nextY < 0 || nextX >= map[0].length || nextY >= map.length) {
-            throw new Error('Cannot move out of bounds!');
+            throw new Error(ERRORS.ERR_OUT_OF_BOUNDS);
         }
 
         // Check for blocked tiles
         if (BLOCKED_TILES.includes(map[nextY][nextX].t)) {
-            throw new Error('Path is blocked by an obstacle!');
+            throw new Error(ERRORS.ERR_PATH_BLOCKED);
         }
 
-        const currentZ = map[this.robotPos.y][this.robotPos.x].h;
-        const targetZ = map[nextY][nextX].h;
+        const currentZ = this.explorerPos.z;
+        const validHeights = this.getValidFloorHeights(map[nextY][nextX]);
+        let targetZ = -1;
 
         if (type === 'WALK') {
-            if (currentZ === targetZ) {
+            if (validHeights.includes(currentZ)) {
+                targetZ = currentZ;
                 await this.animateMovement(nextX, nextY, targetZ, 'walk');
             } else {
-                throw new Error('Cannot walk: height difference detected!');
+                throw new Error(ERRORS.ERR_INVALID_MOVE);
             }
         } else {
             // JUMP (SALTO) — permitir cambio de altura de exactamente 1
-            if (Math.abs(currentZ - targetZ) === 1) {
+            const possibleJumpHeights = validHeights.filter(h => Math.abs(currentZ - h) === 1);
+            if (possibleJumpHeights.length > 0) {
+                targetZ = Math.max(...possibleJumpHeights);
                 await this.animateMovement(nextX, nextY, targetZ, 'jump');
             } else {
-                throw new Error('Cannot jump: height difference must be exactly 1 level!');
+                throw new Error(ERRORS.ERR_INVALID_JUMP);
             }
         }
     }
 
     async executeActivate() {
         if (this.shouldStop) return;
-        const key = `${this.robotPos.x},${this.robotPos.y}`;
+        const key = `${this.explorerPos.x},${this.explorerPos.y}`;
+        const currentTileInfo = this.currentLevel!.map[this.explorerPos.y][this.explorerPos.x];
 
-        // Reproducir la animación de activación
-        await this.animateMovement(this.robotPos.x, this.robotPos.y, this.robotPos.z, 'activate');
+        // Reproducir la animación correspondiente
+        await this.animateMovement(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 'activate');
 
-        // Verificar si se encuentra sobre una casilla objetivo 
-        if (this.goalTiles.has(key)) {
+        // Verificar si se encuentra sobre una casilla objetivo y es un TILE.BLUE
+        if (this.goalTiles.has(key) && currentTileInfo.t === TILE.BLUE) {
             this.activatedGoals.add(key);
 
             const [x, y] = key.split(',').map(Number);
-            const z = this.currentLevel!.map[y][x].h;
+            const z = currentTileInfo.h;
             const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
             if (block) {
                 block.setFrame(TILE.YELLOW);
+                this.updateGoalBeam(x, y, z, 0xffff00);
+            }
+
+            // Verificar si el nivel está completado
+            const totalGoals = this.goalTiles.size;
+            const allActivated = totalGoals > 0 && this.activatedGoals.size === totalGoals;
+            if (allActivated) {
+                this.shouldStop = true;
+                EventBus.emit('level-complete', this.currentLevel?.id);
+            }
+        }
+    }
+
+    async executePick() {
+        if (this.shouldStop) return;
+        const key = `${this.explorerPos.x},${this.explorerPos.y}`;
+        const currentTileInfo = this.currentLevel!.map[this.explorerPos.y][this.explorerPos.x];
+
+        // Reproducir la animación correspondiente
+        await this.animateMovement(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 'pick');
+
+        // Verificar si se encuentra sobre una casilla objetivo y es un TILE.GRAIN
+        if (this.goalTiles.has(key) && currentTileInfo.t === TILE.GRAIN) {
+            this.activatedGoals.add(key);
+
+            const [x, y] = key.split(',').map(Number);
+            const z = currentTileInfo.h;
+            const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+            if (block) {
+                block.setFrame(TILE.GEM);
             }
 
             // Verificar si el nivel está completado
@@ -367,7 +441,7 @@ export class Game extends Scene {
         this.shouldStop = true;
         this.tweens.killAll();
 
-        this.robotPos = {
+        this.explorerPos = {
             x: level.startPos.x,
             y: level.startPos.y,
             z: level.map[level.startPos.y][level.startPos.x].h,
@@ -381,30 +455,35 @@ export class Game extends Scene {
             const z = this.currentLevel!.map[y][x].h;
             const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
             if (block) {
-                block.setFrame(TILE.BLUE);
+                block.setFrame(this.currentLevel!.map[y][x].t);
+                if (this.currentLevel!.map[y][x].t === TILE.BLUE) {
+                    this.updateGoalBeam(x, y, z, 0x00aaff);
+                } else {
+                    this.updateGoalBeam(x, y, z, null);
+                }
             }
         }
 
-        // Restablecer el aspecto visual del robot
-        const startPos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
+        // Restablecer el aspecto visual del explorer
+        const startPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
         if (this.shadow) {
             this.shadow.setPosition(startPos.x, startPos.y);
-            this.shadow.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 0.1);
+            this.shadow.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1);
             this.shadow.setScale(1);
         }
-        if (this.robot && this.robot.active) {
-            this.robot.setPosition(startPos.x, startPos.y);
-            this.robot.setDepth(((this.robotPos.x + this.robotPos.y) * 100) + 1);
+        if (this.explorer && this.explorer.active) {
+            this.explorer.setPosition(startPos.x, startPos.y);
+            this.explorer.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1);
 
             const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
             const idleFrame = this.direction * 4;
-            if (this.robot.anims) {
-                this.robot.anims.stop();
+            if (this.explorer.anims) {
+                this.explorer.anims.stop();
             }
-            this.robot.setFrame(idleFrame);
-            this.robot.play(`idle-${dirKey}`, true);
-            if (this.robot.anims) {
-                this.robot.anims.timeScale = this.executionSpeed;
+            this.explorer.setFrame(idleFrame);
+            this.explorer.play(`idle-${dirKey}`, true);
+            if (this.explorer.anims) {
+                this.explorer.anims.timeScale = this.executionSpeed;
             }
         }
 
@@ -417,8 +496,8 @@ export class Game extends Scene {
         });
     }
 
-    async animateMovement(nextX: number, nextY: number, nextZ: number, animType: 'walk' | 'jump' | 'activate') {
-        if (!this.robot || !this.robot.active) return;
+    async animateMovement(nextX: number, nextY: number, nextZ: number, animType: 'walk' | 'jump' | 'activate' | 'pick') {
+        if (!this.explorer || !this.explorer.active) return;
 
         this.stopIdleFloating();
 
@@ -427,29 +506,30 @@ export class Game extends Scene {
 
         // Caminar continúa fluidamente por las casillas, pero saltar y activar deben reiniciarse
         if (animType === 'walk') {
-            this.robot.play(animKey, true);
+            this.explorer.play(animKey, true);
         } else {
-            this.robot.play(animKey);
+            this.explorer.play(animKey);
         }
 
-        if (this.robot.anims) {
-            this.robot.anims.timeScale = this.executionSpeed;
+        if (this.explorer.anims) {
+            this.explorer.anims.timeScale = this.executionSpeed;
         }
 
-        // Para la activación, solo reproducir la animación sin movimiento
-        if (animType === 'activate') {
+        // Para la activación o recogida, solo reproducir la animación sin movimiento
+        if (animType === 'activate' || animType === 'pick') {
+            const delayMs = animType === 'pick' ? 900 : 200;
             return new Promise<void>((resolve) => {
-                this.time.delayedCall(200 / this.executionSpeed, () => {
-                    if (this.shouldStop || !this.robot || !this.robot.active) {
+                this.time.delayedCall(delayMs / this.executionSpeed, () => {
+                    if (this.shouldStop || !this.explorer || !this.explorer.active) {
                         resolve();
                         return;
                     }
                     const idleFrame = this.direction * 4;
-                    this.robot.stop();
-                    this.robot.setFrame(idleFrame);
-                    this.robot.play(`idle-${dirKey}`, true);
-                    if (this.robot.anims) {
-                        this.robot.anims.timeScale = this.executionSpeed;
+                    this.explorer.stop();
+                    this.explorer.setFrame(idleFrame);
+                    this.explorer.play(`idle-${dirKey}`, true);
+                    if (this.explorer.anims) {
+                        this.explorer.anims.timeScale = this.executionSpeed;
                     }
                     //this.startIdleFloating();
                     resolve();
@@ -458,14 +538,14 @@ export class Game extends Scene {
         }
 
         // Almacenar ambas profundidades (depths)
-        const currentDepth = ((this.robotPos.x + this.robotPos.y) * 100) + 1;
-        const targetDepth = ((nextX + nextY) * 100) + 1;
+        const currentDepth = ((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1;
+        const targetDepth = ((nextX + nextY) * 100) + nextZ * 100 + 1;
 
-        const currentShadowDepth = ((this.robotPos.x + this.robotPos.y) * 100) + 0.1;
-        const targetShadowDepth = ((nextX + nextY) * 100) + 0.1;
+        const currentShadowDepth = ((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1;
+        const targetShadowDepth = ((nextX + nextY) * 100) + nextZ * 100 + 0.1;
 
         // Almacenar la posición inicial en pantalla
-        const startY = this.robot.y;
+        const startY = this.explorer.y;
 
         // Calcular la posición final en pantalla
         const screenPos = this.cartToIso(nextX, nextY, nextZ);
@@ -479,7 +559,7 @@ export class Game extends Scene {
                 return;
             }
 
-            const targets = this.shadow ? [this.robot, this.shadow] : [this.robot];
+            const targets = this.shadow ? [this.explorer, this.shadow] : [this.explorer];
 
             this.tweens.add({
                 targets: targets,
@@ -488,13 +568,13 @@ export class Game extends Scene {
                 duration: 400 / this.executionSpeed,
                 ease: 'Linear',
                 onUpdate: (tween) => {
-                    if (!this.robot || !this.robot.active) return;
+                    if (!this.explorer || !this.explorer.active) return;
                     const progress = tween.progress;
 
                     // Aplicar arco de salto si es necesario
                     if (animType === 'jump') {
                         const arc = Math.sin(Math.PI * progress) * jumpHeight;
-                        this.robot.y = (startY + (screenPos.y - startY) * progress) - arc;
+                        this.explorer.y = (startY + (screenPos.y - startY) * progress) - arc;
                         if (this.shadow) {
                             this.shadow.setScale(1 - (Math.sin(Math.PI * progress) * 0.3));
                         }
@@ -502,23 +582,23 @@ export class Game extends Scene {
 
                     // Gestión de la profundidad (depth)
                     if (progress < 0.1) {
-                        this.robot.setDepth(currentDepth);
+                        this.explorer.setDepth(currentDepth);
                         if (this.shadow) this.shadow.setDepth(currentShadowDepth);
                     } else if (progress > 0.9) {
-                        this.robot.setDepth(targetDepth);
+                        this.explorer.setDepth(targetDepth);
                         if (this.shadow) this.shadow.setDepth(targetShadowDepth);
                     } else {
-                        this.robot.setDepth(Math.max(currentDepth, targetDepth));
+                        this.explorer.setDepth(Math.max(currentDepth, targetDepth));
                         if (this.shadow) this.shadow.setDepth(Math.max(currentShadowDepth, targetShadowDepth));
                     }
                 },
                 onComplete: () => {
-                    if (this.shouldStop || !this.robot || !this.robot.active) {
+                    if (this.shouldStop || !this.explorer || !this.explorer.active) {
                         resolve();
                         return;
                     }
-                    this.robotPos = { x: nextX, y: nextY, z: nextZ };
-                    this.robot.setDepth(targetDepth);
+                    this.explorerPos = { x: nextX, y: nextY, z: nextZ };
+                    this.explorer.setDepth(targetDepth);
                     if (this.shadow) {
                         this.shadow.setDepth(targetShadowDepth);
                         this.shadow.setScale(1);
@@ -554,38 +634,140 @@ export class Game extends Scene {
         return { x: tx, y: ty };
     }
 
-    createMap(mapData: TileInfo[][]) {
+    /**
+     * Crea el mapa isométrico. Si `animate` es true, los bloques caen desde
+     * arriba con un efecto de rebote escalonado (de atrás hacia adelante).
+     * Devuelve la duración total de la animación en ms (0 si no hay animación).
+     */
+    createMap(mapData: TileInfo[][], animate: boolean = false): number {
+        const pendingBeams: { x: number; y: number; z: number; color: number }[] = [];
+        let maxAnimEnd = 0;
+
         for (let y = 0; y < mapData.length; y++) {
             for (let x = 0; x < mapData[y].length; x++) {
                 const tileInfo = mapData[y][x];
 
                 for (let z = 0; z <= tileInfo.h; z++) {
+                    if (tileInfo.t === TILE.WOOD && tileInfo.h > 0) {
+                        if (z > 0 && z < tileInfo.h) {
+                            continue; // Espacio vacio debajo del WOOD
+                        }
+                    }
+
                     const pos = this.cartToIso(x, y, z);
-                    const isGoal = z === tileInfo.h && tileInfo.t === TILE.BLUE;
+                    const isGoal = z === tileInfo.h && (tileInfo.t === TILE.BLUE || tileInfo.t === TILE.GRAIN);
                     let targetFrame = (z === tileInfo.h) ? tileInfo.t : TILE.GRAY;
 
                     const block = this.add.image(pos.x, pos.y, 'tiles', targetFrame);
                     block.setName(`${x},${y},${z}`);
-                    block.setDepth((x + y) * 100);
+                    block.setDepth((x + y) * 100 + z * 100);
                     this.mapObjects.push(block);
+
+                    // Animación de caída de bloques
+                    if (animate) {
+                        const dropHeight = 250 + z * 40;
+                        const delay = (x + y) * 55 + z * 35;
+                        const duration = 1100;
+                        const finalY = pos.y;
+
+                        block.setAlpha(0);
+                        block.y = pos.y - dropHeight;
+
+                        this.tweens.add({
+                            targets: block,
+                            y: finalY,
+                            alpha: 1,
+                            duration: duration,
+                            delay: delay,
+                            ease: 'Bounce.easeOut',
+                        });
+
+                        maxAnimEnd = Math.max(maxAnimEnd, delay + duration);
+                    }
 
                     if (isGoal) {
                         this.goalTiles.add(`${x},${y}`);
+                        if (tileInfo.t === TILE.BLUE) {
+                            if (animate) {
+                                pendingBeams.push({ x, y, z, color: 0x00aaff });
+                            } else {
+                                this.updateGoalBeam(x, y, z, 0x00aaff);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        // Mostrar beams de objetivos después de que los bloques aterricen
+        if (animate && pendingBeams.length > 0) {
+            this.time.delayedCall(maxAnimEnd, () => {
+                for (const beam of pendingBeams) {
+                    this.updateGoalBeam(beam.x, beam.y, beam.z, beam.color);
+                }
+            });
+        }
+
+        return maxAnimEnd;
     }
 
     updateRotation() {
-        if (!this.robot || !this.robot.active) return;
+        if (!this.explorer || !this.explorer.active) return;
         const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
         const idleFrame = this.direction * 4;
-        this.robot.stop();
-        this.robot.setFrame(idleFrame);
-        this.robot.play(`idle-${dirKey}`, true);
-        if (this.robot.anims) {
-            this.robot.anims.timeScale = this.executionSpeed;
+        this.explorer.stop();
+        this.explorer.setFrame(idleFrame);
+        this.explorer.play(`idle-${dirKey}`, true);
+        if (this.explorer.anims) {
+            this.explorer.anims.timeScale = this.executionSpeed;
+        }
+    }
+
+    updateGoalBeam(x: number, y: number, z: number, color: number | null) {
+        const beamName = `beam-${x},${y},${z}`;
+        const existingBeam = this.children.getByName(beamName);
+        if (existingBeam) {
+            existingBeam.destroy();
+        }
+
+        if (color !== null) {
+            const pos = this.cartToIso(x, y, z);
+            const graphics = this.add.graphics();
+
+            // Draw a volumetric cone using a stack of isometric ellipses
+            // Drawn from top to bottom for correct depth blending
+            const steps = 40;
+            for (let i = steps - 1; i >= 0; i--) {
+                const t = i / (steps - 1); // 0 is bottom, 1 is top
+
+                // Isometric ellipse width and height (height is half of width)
+                const width = 18 + (t * 26); // 30 at bottom, 56 at top
+                const height = width / 2;
+
+                // Position goes up in the air (y decreases)
+                const y = pos.y - (-14) - (t * 60);
+
+                // Alpha fades out as it goes higher
+                const sliceAlpha = 0.09 * (1 - t);
+
+                graphics.fillStyle(color, sliceAlpha);
+                graphics.fillEllipse(pos.x, y, width, height);
+            }
+
+            graphics.setBlendMode(Phaser.BlendModes.ADD);
+            graphics.setDepth(((x + y) * 100) + z * 100 + 0.5);
+            graphics.setName(beamName);
+
+            this.mapObjects.push(graphics);
+
+            this.tweens.add({
+                targets: graphics,
+                alpha: { from: 0.5, to: 1 },
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
     }
 
@@ -596,9 +778,9 @@ export class Game extends Scene {
             this.idleFloatingTween = null;
 
             // Volver a la posición base
-            const basePos = this.cartToIso(this.robotPos.x, this.robotPos.y, this.robotPos.z);
-            if (this.robot) {
-                this.robot.y = basePos.y;
+            const basePos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
+            if (this.explorer) {
+                this.explorer.y = basePos.y;
             }
             if (this.shadow) {
                 this.shadow.setScale(1);
@@ -613,10 +795,11 @@ export class Game extends Scene {
             const startFrameWalk = dir === 'se' ? 20 : dir === 'sw' ? 25 : dir === 'nw' ? 30 : 35;
             const startFrameJump = dir === 'se' ? 40 : dir === 'sw' ? 45 : dir === 'nw' ? 50 : 55;
             const startFrameActivate = dir === 'se' ? 60 : dir === 'sw' ? 65 : dir === 'nw' ? 70 : 75;
+            const startFramePick = dir === 'se' ? 80 : dir === 'sw' ? 85 : dir === 'nw' ? 90 : 95;
 
             this.anims.create({
                 key: `idle-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameIdle, end: startFrameIdle + 3 }),
+                frames: this.anims.generateFrameNumbers('explorer', { start: startFrameIdle, end: startFrameIdle + 3 }),
                 frameRate: 4,
                 repeatDelay: 6000,
                 repeat: -1,
@@ -624,18 +807,24 @@ export class Game extends Scene {
             });
             this.anims.create({
                 key: `walk-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameWalk, end: startFrameWalk + 4 }),
+                frames: this.anims.generateFrameNumbers('explorer', { start: startFrameWalk, end: startFrameWalk + 4 }),
                 frameRate: 10,
                 repeat: -1
             });
             this.anims.create({
                 key: `jump-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameJump, end: startFrameJump + 4 }),
+                frames: this.anims.generateFrameNumbers('explorer', { start: startFrameJump, end: startFrameJump + 4 }),
                 frameRate: 12.5
             });
             this.anims.create({
                 key: `activate-${dir}`,
-                frames: this.anims.generateFrameNumbers('robot', { start: startFrameActivate, end: startFrameActivate + 1 }),
+                frames: this.anims.generateFrameNumbers('explorer', { start: startFrameActivate, end: startFrameActivate + 1 }),
+                frameRate: 10
+            });
+            this.anims.create({
+                key: `pick-${dir}`,
+                frames: this.anims.generateFrameNumbers('explorer', { start: startFramePick, end: startFramePick + 2 }),
+                repeat: 2,
                 frameRate: 10
             });
         });
