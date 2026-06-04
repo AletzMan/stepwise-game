@@ -2,7 +2,7 @@ import { LEVELS } from "../game/levels";
 import { LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/ui/LanguageToggle";
-import { LevelCard } from "../components/layout/levels/LevelCard";
+import { LevelCard } from "../components/levels/LevelCard";
 import { NavLink } from "react-router";
 import { LogoSteps } from "../components/layout/LogoSteps";
 import { useGameStore } from "../store/gameStore";
@@ -65,8 +65,6 @@ export default function Levels() {
                 {/* MAPA DE SECTORES (GRID TÁCTICA) */}
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-4 w-full justify-center items-start h-[calc(100svh-220px)] overflow-y-auto">
                     {LEVELS.map((level, index) => {
-                        // Simulación de estados para darle dinamismo visual a la UI
-                        // (Puedes reemplazar esto luego con tu lógica real de progreso/LocalStorage) 
                         const status = levels.find(l => l.id === level.id)?.status || 'locked';
 
                         return (

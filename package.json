@@ -27,6 +27,8 @@
     "build-nolog": "vite build --config vite/config.prod.mjs"
   },
   "dependencies": {
+    "@dnd-kit/helpers": "^0.4.0",
+    "@dnd-kit/react": "^0.4.0",
     "@fontsource/titan-one": "^5.2.8",
     "driver.js": "^1.4.0",
     "i18next": "^26.2.0",
