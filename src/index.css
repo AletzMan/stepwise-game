@@ -194,8 +194,10 @@ body {
    ────────────────────────────────────────────────────────── */
 
 /* EL VELO */
-.driver-popover-mask {
-  opacity: 0.75 !important;
+.driver-overlay {
+  >path {
+    opacity: 0.8 !important;
+  }
 }
 
 /* EL ELEMENTO ACTIVO */
@@ -208,7 +210,7 @@ body {
 }
 
 /* VENTANA PRINCIPAL */
-.driver-popover.reboot-tutorial-popover {
+.driver-popover.stepwise-tutorial-popover {
   background: var(--color-bg-primary) !important;
   border: 1px solid var(--color-border-custom) !important;
   border-radius: 4px !important;
@@ -220,12 +222,12 @@ body {
 }
 
 /* Flecha del globo */
-.reboot-tutorial-popover .driver-popover-arrow {
+.stepwise-tutorial-popover .driver-popover-arrow {
   display: none !important;
 }
 
 /* CABECERA */
-.reboot-tutorial-popover .driver-popover-title {
+.stepwise-tutorial-popover .driver-popover-title {
   background: transparent !important;
   color: var(--color-text-primary) !important;
   font-family: var(--font-outfit) !important;
@@ -240,7 +242,7 @@ body {
 }
 
 /* El "LED" de FRAG */
-.reboot-tutorial-popover .driver-popover-title::before {
+.stepwise-tutorial-popover .driver-popover-title::before {
   content: "";
   display: block;
   width: 6px;
@@ -251,7 +253,7 @@ body {
 }
 
 /* CUERPO DEL TEXTO  */
-.reboot-tutorial-popover .driver-popover-description {
+.stepwise-tutorial-popover .driver-popover-description {
   padding: 0 20px 20px !important;
   font-family: var(--font-sans) !important;
   /* <--- Clave para que no se sienta pesado */
@@ -263,8 +265,8 @@ body {
 }
 
 /* <b> o <strong> en tu tutorial, se verán como código */
-.reboot-tutorial-popover .driver-popover-description strong,
-.reboot-tutorial-popover .driver-popover-description b {
+.stepwise-tutorial-popover .driver-popover-description strong,
+.stepwise-tutorial-popover .driver-popover-description b {
   color: var(--purple) !important;
   font-family: var(--font-mono) !important;
   font-weight: 500 !important;
@@ -275,7 +277,7 @@ body {
 }
 
 /* FOOTER  */
-.reboot-tutorial-popover .driver-popover-footer {
+.stepwise-tutorial-popover .driver-popover-footer {
   background: var(--color-bg-primary) !important;
   border-top: 1px solid var(--color-border-custom) !important;
   padding: 12px 20px !important;
@@ -286,14 +288,14 @@ body {
 }
 
 /* CONTROLES Y BOTONES */
-.reboot-tutorial-popover .driver-popover-progress-text {
+.stepwise-tutorial-popover .driver-popover-progress-text {
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
   color: var(--color-text-muted) !important;
   letter-spacing: 0.1em !important;
 }
 
-.reboot-tutorial-popover .driver-popover-footer button {
+.stepwise-tutorial-popover .driver-popover-footer button {
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
   font-weight: 600 !important;
@@ -307,27 +309,27 @@ body {
   cursor: pointer !important;
 }
 
-.reboot-tutorial-popover .driver-popover-btn .driver-popover-btn-disabled {
+.stepwise-tutorial-popover .driver-popover-btn .driver-popover-btn-disabled {
   opacity: 1;
   cursor: not-allowed !important;
 }
 
 /* Botón Siguiente (Borde morado limpio, se rellena al pasar el mouse) */
-.reboot-tutorial-popover .driver-popover-next-btn {
+.stepwise-tutorial-popover .driver-popover-next-btn {
   background: transparent !important;
   color: var(--color-accent-purple) !important;
   text-shadow: none !important;
   border: 1px solid var(--color-accent-purple) !important;
 }
 
-.reboot-tutorial-popover .driver-popover-next-btn:hover {
+.stepwise-tutorial-popover .driver-popover-next-btn:hover {
   background: var(--color-accent-purple) !important;
   color: var(--color-bg-void) !important;
   text-shadow: none !important;
 }
 
 /* Botón Anterior (Solo texto, sin caja, para no saturar) */
-.reboot-tutorial-popover .driver-popover-prev-btn {
+.stepwise-tutorial-popover .driver-popover-prev-btn {
   background: transparent !important;
   border: none !important;
   color: var(--color-text-muted) !important;
@@ -335,7 +337,7 @@ body {
   text-shadow: none !important;
 }
 
-.reboot-tutorial-popover .driver-popover-prev-btn:hover {
+.stepwise-tutorial-popover .driver-popover-prev-btn:hover {
   color: var(--color-text-primary) !important;
   text-shadow: none !important;
 }
