@@ -9,7 +9,7 @@ import * as Phaser from 'phaser';
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
     width: 768,
-    height: 768,
+    height: 600,
     parent: 'game-container',
     pixelArt: false,
     scale: {
@@ -17,10 +17,10 @@ const config: Phaser.Types.Core.GameConfig = {
         autoCenter: Phaser.Scale.Center.CENTER_BOTH,
         max: {
             width: 768,
-            height: 768,
+            height: 600,
         },
         width: 768,
-        height: 768,
+        height: 600,
     },
     backgroundColor: '#121820',
     scene: [
