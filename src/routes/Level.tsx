@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useGameStore } from '../store/gameStore';
 import { driver, DriveStep } from 'driver.js';
-import { TUTORIAL_CONFIG, TUTORIAL_STEPS_LVL1, TUTORIAL_STEPS_LVL11 } from '../game/data/tutorialStep';
+import { TUTORIAL_CONFIG, TUTORIAL_STEPS_LVL1, TUTORIAL_STEPS_LVL11, TUTORIAL_STEPS_LVL21, TUTORIAL_STEPS_LVL26, TUTORIAL_STEPS_LVL31 } from '../game/data/tutorialStep';
 import { COMMAND_CONFIG } from '../game/data/constants';
 import { ProgramSlot } from '../game/types/game';
 import SortableCommand from '../components/levels/SortableCommand';
@@ -23,6 +23,7 @@ import { move } from '@dnd-kit/helpers';
 export interface QueueItem {
     id: number;
     cmd: Command;
+    value?: number;
 }
 
 let _queueIdCounter = 0;
@@ -177,7 +178,10 @@ export function Level() {
     // ------------------------------------------------------------
     useEffect(() => {
         const currentLevel = levels.find(l => l.id === levelInfo?.id);
-        if (currentLevel?.status !== 'locked' || (currentLevel?.id !== 11 && currentLevel?.id !== 1)) return
+        console.log("currentLevel", currentLevel)
+        const levelsWhitTutorial = [1, 11, 21, 26, 31]
+        if (currentLevel && currentLevel?.stars > 0 || (!levelsWhitTutorial.includes(currentLevel?.id ?? 0))) return
+        console.log("ENTRO")
 
         let steps: DriveStep[] = []
         if (currentLevel?.id === 1) {
@@ -185,6 +189,15 @@ export function Level() {
         }
         else if (currentLevel?.id === 11) {
             steps = TUTORIAL_STEPS_LVL11
+        }
+        else if (currentLevel?.id === 21) {
+            steps = TUTORIAL_STEPS_LVL21
+        }
+        else if (currentLevel?.id === 26) {
+            steps = TUTORIAL_STEPS_LVL26
+        }
+        else if (currentLevel?.id === 31) {
+            steps = TUTORIAL_STEPS_LVL31
         }
 
         const timer = setTimeout(() => {
@@ -238,13 +251,26 @@ export function Level() {
         }
     }, []);
 
+    const [showRepeatModal, setShowRepeatModal] = useState(false);
+    const [repeatValue, setRepeatValue] = useState(2);
+
     const addCommand = (cmd: Command) => {
         if (isRunning) return;
         const queue = getQueue(activeSlot);
         const maxSlots = getMaxSlots(activeSlot);
         if (queue.length < maxSlots) {
-            setQueue(activeSlot, [...queue, { id: nextQueueId(), cmd }]);
+            if (cmd === 'REPEAT') {
+                setShowRepeatModal(true);
+            } else {
+                setQueue(activeSlot, [...queue, { id: nextQueueId(), cmd }]);
+            }
         }
+    };
+
+    const handleRepeatConfirm = () => {
+        const queue = getQueue(activeSlot);
+        setQueue(activeSlot, [...queue, { id: nextQueueId(), cmd: 'REPEAT', value: repeatValue }]);
+        setShowRepeatModal(false);
     };
 
     const removeCommand = (slot: ProgramSlot, index: number) => {
@@ -278,10 +304,10 @@ export function Level() {
         executedCommands.current = mainQueue.length + f1Queue.length + f2Queue.length + f3Queue.length;
 
         EventBus.emit('run-program', {
-            main: mainQueue.map(item => item.cmd),
-            f1: f1Queue.map(item => item.cmd),
-            f2: f2Queue.map(item => item.cmd),
-            f3: f3Queue.map(item => item.cmd),
+            main: mainQueue.map(item => ({ cmd: item.cmd, value: item.value })),
+            f1: f1Queue.map(item => ({ cmd: item.cmd, value: item.value })),
+            f2: f2Queue.map(item => ({ cmd: item.cmd, value: item.value })),
+            f3: f3Queue.map(item => ({ cmd: item.cmd, value: item.value })),
         });
     };
 
@@ -443,6 +469,7 @@ export function Level() {
                                     index={i}
                                     id={item ? item.id : -(i + 1)}
                                     cmd={item?.cmd}
+                                    value={item?.value}
                                     slot={slot}
                                     isRunning={isRunning}
                                     isHighlighted={isHighlighted}
@@ -491,6 +518,31 @@ export function Level() {
                     />
                 )}
 
+                {/* Modal REPEAT */}
+                {showRepeatModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="bg-bg-secondary border border-border-custom p-6 rounded-lg shadow-xl w-80">
+                            <h3 className="text-white text-lg font-bold mb-4 font-jetbrains">{t('app.repeat_modal_title', { defaultValue: 'Número de repeticiones' })}</h3>
+                            <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={repeatValue}
+                                onChange={(e) => setRepeatValue(parseInt(e.target.value) || 1)}
+                                className="w-full bg-bg-tertiary border border-border-custom text-white p-2 rounded mb-4 font-jetbrains"
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button intent="ghost" color="cyan" size="sm" onClick={() => setShowRepeatModal(false)}>
+                                    {t('app.btn_cancel', { defaultValue: 'Cancelar' })}
+                                </Button>
+                                <Button intent="solid" color="green" size="sm" onClick={handleRepeatConfirm}>
+                                    {t('app.btn_confirm', { defaultValue: 'Aceptar' })}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Contenido principal */}
                 <div className="flex flex-col min-[901px]:flex-row gap-2 flex-1 min-h-0">
                     {/* Lienzo de Phaser (Canvas) */}
@@ -499,7 +551,7 @@ export function Level() {
                     </div>
 
                     {/* Panel de programación */}
-                    <div className="w-[325px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
+                    <div className="w-[328px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
 
                         {/* Paleta de comandos */}
                         <div id="command-palette" className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">

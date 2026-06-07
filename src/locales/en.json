@@ -27,6 +27,7 @@
       "TURN_RIGHT": "Right",
       "ACTIVATE": "Activate",
       "PICK": "Pick",
+      "REPEAT": "Repeat",
       "F1": "F1",
       "F2": "F2",
       "F3": "F3"
@@ -89,50 +90,80 @@
       "buttons": {
         "next": "CONTINUE",
         "prev": "BACK",
-        "done": "DONE"
+        "done": "READY"
       },
       "1": {
         "welcome": {
           "title": "Welcome to Stepwise!",
-          "description": "Get ready to master the art of logic. Your mission is to guide the automated explorer by programming its movements step-by-step. Have fun learning!"
+          "description": "Your mission is to guide the character to the goal by planning their movements step by step. Have fun!"
         },
         "commands": {
-          "title": "Command Palette",
-          "description": "These are the logical instructions available to you. Use them to write the direct movement routines for your explorer."
+          "title": "Action Palette",
+          "description": "These are the movements you can give to your character."
         },
         "commandsTwo": {
-          "title": "Building the Sequence",
-          "description": "Click a command to inject it into your codebase. Remember: when the explorer stands on a target tile, you must execute the [ACTIVATE] command to power up the node."
+          "title": "How to Play",
+          "description": "Tap an action to add it to your list. Note: when standing on top of a glowing blue tile, you must use [ACTIVATE] to turn it on."
         },
         "sequence": {
-          "title": "Code Pipeline",
-          "description": "This is your current instruction sequence. Commands will execute in strict order from left to right. Plan your strategy!"
+          "title": "Your Step List",
+          "description": "This is where you'll see the movements you add. They will play in order, from left to right."
         },
         "sequenceDrag": {
-          "title": "Reorganize Code",
-          "description": "Don't worry if you make a mistake! You can drag and drop commands within the sequence to rearrange their order or fix your path easily."
+          "title": "Move & Rearrange",
+          "description": "Don't worry if you make a mistake! You can drag and drop the tiles in your list to easily change their order."
         },
         "controlButtons": {
-          "title": "Execution Console",
-          "description": "Use these to compile your code: hit [PLAY] to run your program, [STOP] to halt operations, or [CLEAR] to wipe the board and rewrite your script."
+          "title": "Playback Controls",
+          "description": "Use [PLAY] to make the character move, [STOP] to pause them, or [CLEAR] to wipe everything and start over."
         },
         "speed": {
-          "title": "Clock Speed",
-          "description": "Adjust the CPU processing speed. Overclock the timer to see instant results, or slow it down to debug your path step-by-step."
+          "title": "Walking Speed",
+          "description": "Adjust the pacing to make the character walk faster, or slow them down to watch their steps closely."
         },
         "canvas": {
-          "title": "Mission Sector",
-          "description": "The 3D grid layout of the operation. Your objective is to map out the perfect path and switch on all glowing nodes to clear the level."
+          "title": "The Map",
+          "description": "This is the game board. Your goal is to light up all the glowing tiles to clear the level."
         }
       },
       "11": {
         "functions": {
-          "title": "Function Blocks",
-          "description": "You're running out of space! Functions let you package a routine to reuse it. Tap the [F1] slot to open its dedicated memory and program the commands you want to repeat inside it."
+          "title": "The Special F1 Block",
+          "description": "You're going to run out of space in your main list! Tap the [F1] tab to open an extra list and save the movements you want to repeat a lot."
         },
         "functionsTwo": {
-          "title": "Calling F1",
-          "description": "Once your function is programmed, switch back to the [MAIN] slot and add the [F1] command to your pipeline. Every time the processor reads [F1], it will execute all the instructions stored inside it, saving valuable space."
+          "title": "Using F1",
+          "description": "When you're done, go back to your main list [MAIN] and add the [F1] tile. Every time the game reads [F1], it will repeat all the steps you saved inside it."
+        }
+      },
+      "21": {
+        "functions": {
+          "title": "Second F2 Block",
+          "description": "The maps are getting bigger! Now you have another extra list called [F2]. Tap its tab to save a different group of steps."
+        },
+        "functionsTwo": {
+          "title": "Combining Actions",
+          "description": "You can now use both [F1] and [F2] in your main list. Combine them to beat the longest paths using very little space."
+        }
+      },
+      "26": {
+        "pick": {
+          "title": "Break the Blocks!",
+          "description": "Now you have the [PICK] action. Use it when the character is right on top of a golden block to break it and grab the gold."
+        },
+        "pickTwo": {
+          "title": "Gold Rules",
+          "description": "Watch out! Gold blocks can only be broken once. Make sure to collect all of them before your character runs out of movements."
+        }
+      },
+      "31": {
+        "repeat": {
+          "title": "The REPEAT Command",
+          "description": "This instruction multiplies your steps. It automatically repeats the movements you placed right before it."
+        },
+        "repeatTwo": {
+          "title": "How to Use REPEAT",
+          "description": "First, place the steps you want to repeat, and right after them, add [REPEAT] choosing how many EXTRA times they should run. The character will look back and repeat those same steps that many times."
         }
       }
     }

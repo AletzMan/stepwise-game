@@ -58,10 +58,10 @@ export class Game extends Scene {
         });
 
         EventBus.on('run-program', (data: {
-            main: Command[];
-            f1: Command[];
-            f2: Command[];
-            f3: Command[];
+            main: { cmd: Command; value?: number }[];
+            f1: { cmd: Command; value?: number }[];
+            f2: { cmd: Command; value?: number }[];
+            f3: { cmd: Command; value?: number }[];
         }) => {
             this.runProgram(data.main, data.f1, data.f2, data.f3);
         });
@@ -191,7 +191,7 @@ export class Game extends Scene {
         });
     }
 
-    async runProgram(main: Command[], f1: Command[], f2: Command[], f3: Command[]) {
+    async runProgram(main: { cmd: Command, value?: number }[], f1: { cmd: Command, value?: number }[], f2: { cmd: Command, value?: number }[], f3: { cmd: Command, value?: number }[]) {
         if (this.isRunning || this.introAnimating) return;
 
         // Reiniciar el estado del nivel sin volver a cargar los elementos visuales
@@ -244,10 +244,10 @@ export class Game extends Scene {
     }
 
     async executeCommandList(
-        commands: Command[],
-        f1: Command[],
-        f2: Command[],
-        f3: Command[],
+        commands: { cmd: Command, value?: number }[],
+        f1: { cmd: Command, value?: number }[],
+        f2: { cmd: Command, value?: number }[],
+        f3: { cmd: Command, value?: number }[],
         depth: number,
         currentSlot: 'main' | 'f1' | 'f2' | 'f3' = 'main',
         stack: { slot: string; index: number }[] = []
@@ -259,7 +259,8 @@ export class Game extends Scene {
         for (let i = 0; i < commands.length; i++) {
             if (this.shouldStop) return;
 
-            const cmd = commands[i];
+            const instruction = commands[i];
+            const cmd = instruction.cmd;
             const currentFrame = { slot: currentSlot, index: i };
             const newStack = [...stack, currentFrame];
 
@@ -270,7 +271,14 @@ export class Game extends Scene {
                 stack: newStack
             });
 
-            if (cmd === 'F1') {
+            if (cmd === 'REPEAT') {
+                const count = instruction.value || 1;
+                const previousCommands = commands.slice(0, i);
+                for (let r = 0; r < count; r++) {
+                    await this.executeCommandList(previousCommands, f1, f2, f3, depth + 1, currentSlot, newStack);
+                    if (this.shouldStop) break;
+                }
+            } else if (cmd === 'F1') {
                 await this.executeCommandList(f1, f1, f2, f3, depth + 1, 'f1', newStack);
             } else if (cmd === 'F2') {
                 await this.executeCommandList(f2, f1, f2, f3, depth + 1, 'f2', newStack);
@@ -656,7 +664,10 @@ export class Game extends Scene {
 
                     const pos = this.cartToIso(x, y, z);
                     const isGoal = z === tileInfo.h && (tileInfo.t === TILE.BLUE || tileInfo.t === TILE.GRAIN);
-                    let targetFrame = (z === tileInfo.h) ? tileInfo.t : TILE.GRAY;
+                    let targetFrame = tileInfo.t;
+                    if (z !== tileInfo.h) {
+                        targetFrame = z === 0 ? TILE.BROWN : TILE.GRAY;
+                    }
 
                     const block = this.add.image(pos.x, pos.y, 'tiles', targetFrame);
                     block.setName(`${x},${y},${z}`);

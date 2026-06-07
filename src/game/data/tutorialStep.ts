@@ -88,6 +88,66 @@ export const TUTORIAL_STEPS_LVL11: DriveStep[] = [
 
 ];
 
+export const TUTORIAL_STEPS_LVL21: DriveStep[] = [
+    {
+        element: '#command-palette',
+        popover: {
+            title: "functions",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+    {
+        element: '#command-palette',
+        popover: {
+            title: "functionsTwo",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+
+];
+
+export const TUTORIAL_STEPS_LVL26: DriveStep[] = [
+    {
+        element: '#command-palette',
+        popover: {
+            title: "pick",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+    {
+        element: '#command-palette',
+        popover: {
+            title: "pickTwo",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+
+];
+
+export const TUTORIAL_STEPS_LVL31: DriveStep[] = [
+    {
+        element: '#command-palette',
+        popover: {
+            title: "repeat",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+    {
+        element: '#command-palette',
+        popover: {
+            title: "repeatTwo",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+
+];
+
 
 export const TUTORIAL_CONFIG = {
     showProgress: true,

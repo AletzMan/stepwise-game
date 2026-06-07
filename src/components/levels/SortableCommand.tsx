@@ -8,13 +8,14 @@ interface Props {
     index: number;
     id: number;
     cmd?: Command;
+    value?: number;
     slot: ProgramSlot;
     isRunning: boolean;
     isHighlighted: boolean;
     removeCommand: (slot: ProgramSlot, index: number) => void;
 }
 
-export default function SortableCommand({ index, id, cmd, slot, isRunning, isHighlighted, removeCommand }: Props) {
+export default function SortableCommand({ index, id, cmd, value, slot, isRunning, isHighlighted, removeCommand }: Props) {
     const [element, setElement] = useState<Element | null>(null);
     const { isDragging } = useSortable({ id, index, element: cmd ? element : null, disabled: !cmd });
 
@@ -45,7 +46,9 @@ export default function SortableCommand({ index, id, cmd, slot, isRunning, isHig
 
             {cmd ? (
                 <span className="slot-icon text-lg text-(--cmd-color) leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110">
-                    {COMMAND_CONFIG[cmd].icon} </span>
+                    {COMMAND_CONFIG[cmd].icon}
+                    {cmd === "REPEAT" && value && <span className="absolute bottom-[-10px] right-[-10px] bg-black text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-border-custom/50 shadow-md">{value}</span>}
+                </span>
             ) : (
                 <span className="text-md font-semibold text-(--queue-color)/30 select-none transition-colors group-hover:text-text-muted/40">+</span>
             )}

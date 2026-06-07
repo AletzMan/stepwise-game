@@ -27,6 +27,7 @@
       "TURN_RIGHT": "Derecha",
       "ACTIVATE": "Activar",
       "PICK": "Picar",
+      "REPEAT": "Repetir",
       "F1": "F1",
       "F2": "F2",
       "F3": "F3"
@@ -91,45 +92,75 @@
       "1": {
         "welcome": {
           "title": "¡Bienvenido a Stepwise!",
-          "description": "Prepárate para dominar el arte de la lógica. Tu misión es guiar al explorador automatizado programando sus movimientos paso a paso. ¡Diviértete aprendiendo!"
+          "description": "Tu misión es guiar al personaje hasta la meta planeando sus movimientos paso a paso. ¡A divertirse!"
         },
         "commands": {
-          "title": "Panel de Comandos",
-          "description": "Estas son las instrucciones lógicas disponibles. Con ellas programarás las rutinas de movimiento de tu explorador."
+          "title": "Panel de Acciones",
+          "description": "Estos son los movimientos disponibles que le puedes dar a tu personaje."
         },
         "commandsTwo": {
-          "title": "Creando la Secuencia",
-          "description": "Toca un comando para añadirlo a la línea de código. Recuerda: cuando el explorador se pare sobre una casilla objetivo, deberás ejecutar el comando [ACTIVATE] para encender el nodo."
+          "title": "Cómo Jugar",
+          "description": "Toca una acción para agregarla a tu lista. Ojo: cuando estés encima de una casilla azul brillante, debes usar [ACTIVATE] para encenderla."
         },
         "sequence": {
-          "title": "Línea de Código",
-          "description": "Esta es tu secuencia actual. Los comandos se ejecutarán en estricto orden, de izquierda a derecha. ¡Planea tu estrategia!"
+          "title": "Tu Lista de Pasos",
+          "description": "Aquí verás los movimientos que vas sumando. Se leerán en orden, de izquierda a derecha."
         },
         "sequenceDrag": {
-          "title": "Reorganizar Código",
-          "description": "¡No te preocupes si te equivocas! Puedes arrastrar y soltar los comandos dentro de la secuencia para cambiar su orden o corregir tu ruta fácilmente."
+          "title": "Mover y Cambiar",
+          "description": "¡Si te equivocas no pasa nada! Puedes arrastrar las fichas de tu lista para cambiar su orden de lugar fácilmente."
         },
         "controlButtons": {
-          "title": "Consola de Ejecución",
-          "description": "Usa estos botones para compilar tu código: dale [PLAY] para iniciar la marcha, [STOP] para pausar o [CLEAR] para borrar la secuencia y reescribirla."
+          "title": "Controles de Marcha",
+          "description": "Usa [PLAY] para que el personaje se mueva, [STOP] para detenerlo o [CLEAR] para borrar todo y empezar de nuevo."
         },
         "speed": {
-          "title": "Velocidad",
-          "description": "Ajusta la velocidad de procesamiento. Acelera el tiempo para ver los resultados al instante o ralentízalo para depurar errores paso a paso."
+          "title": "Velocidad de Caminado",
+          "description": "Ajusta el ritmo para que el personaje camine más rápido o vaya más lento si quieres ver bien sus pasos."
         },
         "canvas": {
-          "title": "Sector de Misión",
-          "description": "El terreno de operaciones en 3D. Tu objetivo es trazar la ruta perfecta y activar todos los nodos brillantes para desbloquear el siguiente sector."
+          "title": "El Mapa",
+          "description": "Este es el tablero de juego. Tu meta es encender todas las casillas brillantes para pasar al siguiente nivel."
         }
       },
       "11": {
         "functions": {
-          "title": "Bloques de Funciones",
-          "description": "¡Te estás quedando sin espacio! Las funciones te permiten empaquetar una rutina para reutilizarla. Toca el slot [F1] para abrir su memoria dedicada y programa ahí dentro los comandos que quieras repetir."
+          "title": "El Bloque Especial F1",
+          "description": "¡Te vas a quedar sin espacio en tu lista! Toca la pestaña [F1] para abrir una lista extra y guarda ahí los movimientos que vayas a repetir mucho."
         },
         "functionsTwo": {
-          "title": "Llamando a F1",
-          "description": "Una vez programada tu función, regresa al slot [MAIN] y añade el comando [F1] a tu secuencia. Cada vez que el procesador lea [F1], ejecutará todos los comandos que guardaste dentro de él, ahorrando valioso espacio."
+          "title": "Usar F1",
+          "description": "Cuando termines, regresa a tu lista principal [MAIN] y agrega la ficha [F1]. Cada vez que el juego lea [F1], repetirá todos los pasos que guardaste ahí dentro."
+        }
+      },
+      "21": {
+        "functions": {
+          "title": "Segundo Bloque F2",
+          "description": "¡Los mapas son más grandes! Ahora tienes otra lista extra llamada [F2]. Toca su pestaña para guardar un grupo de pasos diferente al de F1."
+        },
+        "functionsTwo": {
+          "title": "Combinar Acciones",
+          "description": "Ahora puedes usar tanto [F1] como [F2] en tu lista principal. Combínalos para resolver los caminos más largos usando muy poco espacio."
+        }
+      },
+      "26": {
+        "pick": {
+          "title": "¡A Romper Bloques!",
+          "description": "Ahora tienes la acción [PICK]. Úsala cuando el personaje esté justo encima de un bloque dorado para romperlo y recoger el oro."
+        },
+        "pickTwo": {
+          "title": "Reglas del Oro",
+          "description": "¡Ten cuidado! Los bloques de oro solo se pueden romper una vez. Asegúrate de recogerlos todos antes de que tu personaje se quede sin movimientos."
+        }
+      },
+      "31": {
+        "repeat": {
+          "title": "El Comando REPEAT",
+          "description": "Esta instrucción sirve para multiplicar pasos. Repite de forma automática los movimientos que hayas puesto justo antes de ella."
+        },
+        "repeatTwo": {
+          "title": "Cómo Usar REPEAT",
+          "description": "Primero pon los pasos que quieres que se repitan y, justo después, añade [REPEAT] eligiendo cuántas veces EXTRA se ejecutarán. El personaje volverá atrás para repetir esos mismos pasos esa cantidad de veces."
         }
       }
     }
