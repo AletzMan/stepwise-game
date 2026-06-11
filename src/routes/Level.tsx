@@ -7,13 +7,13 @@ import LevelCompleteModal from '../components/layout/LevelCompleteModal';
 import '@fontsource/titan-one';
 import Button from '../components/ui/Button';
 import CommandButton from '../components/ui/CommandButton';
-import { Play, Square, EraserIcon } from 'lucide-react';
+import { Play, Square, EraserIcon, RotateCcw, RotateCw, Layers } from 'lucide-react';
 import LevelErrorModal from '../components/layout/LevelErrorModel';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useGameStore } from '../store/gameStore';
 import { driver, DriveStep } from 'driver.js';
-import { TUTORIAL_CONFIG, TUTORIAL_STEPS_LVL1, TUTORIAL_STEPS_LVL11, TUTORIAL_STEPS_LVL21, TUTORIAL_STEPS_LVL26, TUTORIAL_STEPS_LVL31 } from '../game/data/tutorialStep';
+import { TUTORIAL_CONFIG, TUTORIAL_STEPS_LVL1, TUTORIAL_STEPS_LVL11, TUTORIAL_STEPS_LVL21, TUTORIAL_STEPS_LVL26, TUTORIAL_STEPS_LVL31, TUTORIAL_STEPS_LVL38 } from '../game/data/tutorialStep';
 import { COMMAND_CONFIG } from '../game/data/constants';
 import { ProgramSlot } from '../game/types/game';
 import SortableCommand from '../components/levels/SortableCommand';
@@ -50,6 +50,7 @@ export function Level() {
     const [statusType, setStatusType] = useState<'info' | 'success' | 'error'>('info');
     const [showStatusLevel, setShowStatusLevel] = useState(false);
     const [showErrorLevel, setShowErrorLevel] = useState(false);
+    const [isTopDown, setIsTopDown] = useState(false);
     const [stars, setStars] = useState<number>(0); // Numero de estrellas ganadas en el nivel actual 
     const executedCommands = useRef<number>(0); // Numero total de comandos ejecutados en el nivel actual
     const setLevels = useGameStore((state) => state.setLevels);
@@ -173,13 +174,23 @@ export function Level() {
         EventBus.emit('set-speed', speed);
     }, [speed]);
 
+    const toggleTopPlatform = () => {
+        setIsTopDown(false);
+        EventBus.emit('toggle-topdown', false);
+    };
+
+    const toggleDownPlatform = () => {
+        setIsTopDown(true);
+        EventBus.emit('toggle-topdown', true);
+    }
+
     // ------------------------------------------------------------
     // TUTORIAL (DRIVER.JS)
     // ------------------------------------------------------------
     useEffect(() => {
         const currentLevel = levels.find(l => l.id === levelInfo?.id);
         console.log("currentLevel", currentLevel)
-        const levelsWhitTutorial = [1, 11, 21, 26, 31]
+        const levelsWhitTutorial = [1, 11, 21, 26, 31, 38]
         if (currentLevel && currentLevel?.stars > 0 || (!levelsWhitTutorial.includes(currentLevel?.id ?? 0))) return
         console.log("ENTRO")
 
@@ -198,6 +209,9 @@ export function Level() {
         }
         else if (currentLevel?.id === 31) {
             steps = TUTORIAL_STEPS_LVL31
+        }
+        else if (currentLevel?.id === 38) {
+            steps = TUTORIAL_STEPS_LVL38
         }
 
         const timer = setTimeout(() => {
@@ -551,7 +565,7 @@ export function Level() {
                     </div>
 
                     {/* Panel de programación */}
-                    <div className="w-[328px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
+                    <div className="w-[340px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
 
                         {/* Paleta de comandos */}
                         <div id="command-palette" className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
@@ -589,6 +603,42 @@ export function Level() {
 
                         {/* Botones de control */}
                         <div className="flex flex-col gap-3 p-3 bg-bg-tertiary border border-border-custom rounded-sm">
+                            <div className="flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
+                                <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
+                                    {t('app.camera', { defaultValue: 'Cámara' })}
+                                </span>
+                                <div id="camera-buttons" className="flex gap-1">
+                                    <Button
+                                        intent={isTopDown ? "solid" : "ghost"}
+                                        color="cyan"
+                                        size="none"
+                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                        onMouseDown={toggleDownPlatform}
+                                        onMouseUp={toggleTopPlatform}
+                                        onMouseLeave={toggleTopPlatform}
+                                    >
+                                        <Layers size={16} />
+                                    </Button>
+                                    <Button
+                                        intent="ghost"
+                                        color="cyan"
+                                        size="none"
+                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                        onClick={() => EventBus.emit('rotate-camera', 3)}
+                                    >
+                                        <RotateCcw size={16} />
+                                    </Button>
+                                    <Button
+                                        intent="ghost"
+                                        color="cyan"
+                                        size="none"
+                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                        onClick={() => EventBus.emit('rotate-camera', 1)}
+                                    >
+                                        <RotateCw size={16} />
+                                    </Button>
+                                </div>
+                            </div>
                             <div className="flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
                                 <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
                                     {t('app.speed')}
