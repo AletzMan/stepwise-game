@@ -60,6 +60,15 @@
       "tag": "TRAVEL MAP",
       "title": "CHALLENGES",
       "subtitle": "Select a sector to start",
+      "difficulty": {
+        "easy": "RECRUIT",
+        "medium": "INITIATE",
+        "hard": "EXPLORER",
+        "expert": "STRATEGIST",
+        "legend": "MASTER"
+      },
+      "previous": "PREVIOUS",
+      "next": "NEXT",
       "back": "HOME",
       "status": {
         "completed": "!DONE!",
@@ -164,6 +173,16 @@
         "repeatTwo": {
           "title": "How to Use REPEAT",
           "description": "First, place the steps you want to repeat, and right after them, add [REPEAT] choosing how many EXTRA times they should run. The character will look back and repeat those same steps that many times."
+        }
+      },
+      "38": {
+        "f3": {
+          "title": "The Third Function: F3",
+          "description": "Your toolbox is expanding! You've unlocked [F3], a brand new command list to organize your most complex strategies."
+        },
+        "f3Two": {
+          "title": "Divide and Conquer",
+          "description": "Now you have three tabs to organize your routines however you like! Combine [F1], [F2], and [F3] in the main list to build massive combinations using very few commands."
         }
       }
     }

@@ -1,15 +1,26 @@
 import { LEVELS } from "../game/levels";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../components/ui/LanguageToggle";
 import { LevelCard } from "../components/levels/LevelCard";
 import { NavLink } from "react-router";
 import { LogoSteps } from "../components/layout/LogoSteps";
 import { useGameStore } from "../store/gameStore";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 
+const DIFFICULTY = [
+    { id: 1, label: "easy" },
+    { id: 2, label: "medium" },
+    { id: 3, label: "hard" },
+    { id: 4, label: "expert" },
+    { id: 5, label: "legend" }
+];
 export default function Levels() {
     const { t } = useTranslation();
     const levels = useGameStore((state) => state.levels);
+    const [currentDifficulty, setCurrentDifficulty] = useState<number>(1);
+    const [direction, setDirection] = useState(0);
 
     return (
         <div className="min-h-screen bg-bg-primary relative overflow-hidden flex flex-col items-center select-none px-4 py-12 md:py-16">
@@ -61,21 +72,79 @@ export default function Levels() {
                 <p className="font-outfit text-sm sm:text-base text-text-secondary tracking-wide mb-10 md:mb-14 text-center max-w-md leading-relaxed">
                     {t('levels.subtitle')}
                 </p>
+                <div className="flex items-center justify-center gap-4 sm:gap-6 mb-10">
+                    <button
+                        disabled={currentDifficulty <= 1}
+                        onClick={() => {
+                            setDirection(-1);
+                            setCurrentDifficulty(currentDifficulty - 1);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs sm:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:-translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                        <ChevronLeft size={16} />
+                        {t('levels.previous')}
+                    </button>
+
+                    <div className="w-32 sm:w-44 flex justify-center">
+                        <span className="font-['Titan_One'] text-xl sm:text-2xl tracking-[2px] uppercase bg-linear-to-r from-accent-cyan to-accent-purple bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+                            {t('levels.difficulty.' + DIFFICULTY[currentDifficulty - 1].label)}
+                        </span>
+                    </div>
+
+                    <button
+                        disabled={currentDifficulty >= DIFFICULTY.length}
+                        onClick={() => {
+                            setDirection(1);
+                            setCurrentDifficulty(currentDifficulty + 1);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs sm:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                        {t('levels.next')}
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
 
                 {/* MAPA DE SECTORES (GRID TÁCTICA) */}
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-4 w-full justify-center items-start h-[calc(100svh-220px)] overflow-y-auto">
-                    {LEVELS.map((level, index) => {
-                        const status = levels.find(l => l.id === level.id)?.status || 'locked';
+                <div className="relative w-full h-[calc(100svh-220px)] overflow-hidden">
+                    <AnimatePresence initial={false} custom={direction} mode="wait">
+                        <motion.div
+                            key={currentDifficulty}
+                            custom={direction}
+                            variants={{
+                                enter: (dir: number) => ({
+                                    x: dir > 0 ? 200 : -200,
+                                    opacity: 0
+                                }),
+                                center: {
+                                    x: 0,
+                                    opacity: 1
+                                },
+                                exit: (dir: number) => ({
+                                    x: dir > 0 ? -200 : 200,
+                                    opacity: 0
+                                })
+                            }}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-4 w-full justify-center items-center h-full overflow-y-auto"
+                        >
+                            {LEVELS.slice((currentDifficulty - 1) * 10, currentDifficulty * 10).map((level, index) => {
+                                const status = levels.find(l => l.id === level.id)?.status || 'locked';
 
-                        return (
-                            <LevelCard
-                                key={level.id}
-                                level={level.id}
-                                status={index === 0 && status !== 'completed' ? 'unlocked' : status}
-                                stars={levels.find(l => l.id === level.id)?.stars || 0}
-                            />
-                        );
-                    })}
+                                return (
+                                    <LevelCard
+                                        key={level.id}
+                                        level={level.id}
+                                        status={index === 0 && status !== 'completed' ? 'unlocked' : status}
+                                        stars={levels.find(l => l.id === level.id)?.stars || 0}
+                                        difficulty={currentDifficulty}
+                                    />
+                                );
+                            })}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
             </div>

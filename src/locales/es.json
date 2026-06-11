@@ -60,6 +60,15 @@
       "tag": "MAPA DE VIAJE",
       "title": "DESAFÍOS",
       "subtitle": "Selecciona un sector para comenzar",
+      "difficulty": {
+        "easy": "RECLUTA",
+        "medium": "INICIADO",
+        "hard": "EXPLORADOR",
+        "expert": "ESTRATEGA",
+        "legend": "MAESTRO"
+      },
+      "previous": "ANTERIOR",
+      "next": "SIGUIENTE",
       "back": "INICIO",
       "status": {
         "completed": "!HECHO!",
@@ -161,6 +170,16 @@
         "repeatTwo": {
           "title": "Cómo Usar REPEAT",
           "description": "Primero pon los pasos que quieres que se repitan y, justo después, añade [REPEAT] eligiendo cuántas veces EXTRA se ejecutarán. El personaje volverá atrás para repetir esos mismos pasos esa cantidad de veces."
+        }
+      },
+      "38": {
+        "f3": {
+          "title": "La Tercera Función: F3",
+          "description": "¡Tu caja de herramientas se expande! Has desbloqueado [F3], una nueva lista de comandos para organizar tus estrategias más complejas."
+        },
+        "f3Two": {
+          "title": "Divide y Vencerás",
+          "description": "¡Ahora tienes tres pestañas para organizar tus rutinas como tú quieras! Combina [F1], [F2] y [F3] en la lista principal para crear combinaciones gigantescas usando muy pocos comandos."
         }
       }
     }
