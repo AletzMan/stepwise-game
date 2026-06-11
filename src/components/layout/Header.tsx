@@ -4,6 +4,7 @@ import { LevelData } from '../../game/levels';
 import { LayoutGrid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageToggle from '../ui/LanguageToggle';
+import FullscreenToggle from '../ui/FullscreenToggle';
 import { NavLink, useNavigate } from 'react-router';
 import { LogoSteps } from './LogoSteps';
 
@@ -65,6 +66,9 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
 
                 {/* Botón de Idioma */}
                 <LanguageToggle />
+
+                {/* Botón de Pantalla Completa */}
+                <FullscreenToggle />
             </div>
         </header>
     );
