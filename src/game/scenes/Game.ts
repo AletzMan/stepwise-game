@@ -20,6 +20,9 @@ export class Game extends Scene {
     executionSpeed: number;
     idleFloatingTween: Phaser.Tweens.Tween | null;
     introAnimating: boolean;
+    cameraAngle: number;
+    isRotating: boolean;
+    isTopDown: boolean;
 
     constructor() {
         super('Game');
@@ -34,6 +37,9 @@ export class Game extends Scene {
         this.executionSpeed = 0.5;
         this.idleFloatingTween = null;
         this.introAnimating = false;
+        this.cameraAngle = 0;
+        this.isRotating = false;
+        this.isTopDown = false;
     }
 
     preload() {
@@ -51,6 +57,8 @@ export class Game extends Scene {
         EventBus.removeAllListeners('stop-program');
         EventBus.removeAllListeners('reset-level');
         EventBus.removeAllListeners('set-speed');
+        EventBus.removeAllListeners('rotate-camera');
+        EventBus.removeAllListeners('toggle-topdown');
 
         // Escuchar eventos desde la interfaz de React
         EventBus.on('load-level', (levelId: number) => {
@@ -84,6 +92,14 @@ export class Game extends Scene {
             }
         });
 
+        EventBus.on('rotate-camera', (steps: number) => {
+            this.rotateCamera(steps);
+        });
+
+        EventBus.on('toggle-topdown', (topDown: boolean) => {
+            this.setTopDown(topDown);
+        });
+
         // Limpiar listeners del EventBus cuando la escena se apague
         this.events.on('shutdown', () => {
             EventBus.removeAllListeners('load-level');
@@ -91,6 +107,8 @@ export class Game extends Scene {
             EventBus.removeAllListeners('stop-program');
             EventBus.removeAllListeners('reset-level');
             EventBus.removeAllListeners('set-speed');
+            EventBus.removeAllListeners('rotate-camera');
+            EventBus.removeAllListeners('toggle-topdown');
         });
 
         // Cargar el nivel correspondiente según el pathname de la URL o usar 1 por defecto
@@ -110,6 +128,8 @@ export class Game extends Scene {
         this.currentLevel = level;
         this.shouldStop = true; // Detener cualquier ejecución actual
         this.isRunning = false;
+        this.isRotating = false;
+        this.cameraAngle = 0;
         this.tweens.killAll(); // Finalizar todos los movimientos activos
         this.activatedGoals = new Set();
 
@@ -146,17 +166,18 @@ export class Game extends Scene {
         const startPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
 
         this.shadow = this.add.ellipse(startPos.x, startPos.y, 24, 12, 0x000000, 0.25);
-        this.shadow.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1).setOrigin(0.55, -0.78);
+        this.shadow.setDepth(this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 0.1)).setOrigin(0.55, -0.78);
         this.shadow.setAlpha(0);
 
         this.explorer = this.add.sprite(startPos.x, startPos.y, 'explorer').setOrigin(0.55, 0.68);
-        this.explorer.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1);
+        this.explorer.setDepth(this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 1));
         this.explorer.setScale(0.55);
         this.explorer.setAlpha(0);
 
         // Reproducir la animación de reposo (idle)
-        const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-        const idleFrame = this.direction * 4;
+        const visualDirection = this.getVisualDirection();
+        const dirKey = ['se', 'sw', 'nw', 'ne'][visualDirection];
+        const idleFrame = visualDirection * 4;
         this.explorer.setFrame(idleFrame);
         this.explorer.play(`idle-${dirKey}`, true);
         if (this.explorer.anims) {
@@ -476,15 +497,17 @@ export class Game extends Scene {
         const startPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
         if (this.shadow) {
             this.shadow.setPosition(startPos.x, startPos.y);
-            this.shadow.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1);
+            this.shadow.setDepth(this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 0.1));
             this.shadow.setScale(1);
+            if (this.isTopDown) this.shadow.setAlpha(0);
         }
         if (this.explorer && this.explorer.active) {
             this.explorer.setPosition(startPos.x, startPos.y);
-            this.explorer.setDepth(((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1);
+            this.explorer.setDepth(this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 1));
 
-            const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-            const idleFrame = this.direction * 4;
+            const visualDirection = this.getVisualDirection();
+            const dirKey = ['se', 'sw', 'nw', 'ne'][visualDirection];
+            const idleFrame = visualDirection * 4;
             if (this.explorer.anims) {
                 this.explorer.anims.stop();
             }
@@ -509,7 +532,8 @@ export class Game extends Scene {
 
         this.stopIdleFloating();
 
-        const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
+        const visualDirection = this.getVisualDirection();
+        const dirKey = ['se', 'sw', 'nw', 'ne'][visualDirection];
         const animKey = `${animType}-${dirKey}`;
 
         // Caminar continúa fluidamente por las casillas, pero saltar y activar deben reiniciarse
@@ -532,7 +556,8 @@ export class Game extends Scene {
                         resolve();
                         return;
                     }
-                    const idleFrame = this.direction * 4;
+                    const visualDirection = this.getVisualDirection();
+                    const idleFrame = visualDirection * 4;
                     this.explorer.stop();
                     this.explorer.setFrame(idleFrame);
                     this.explorer.play(`idle-${dirKey}`, true);
@@ -546,11 +571,11 @@ export class Game extends Scene {
         }
 
         // Almacenar ambas profundidades (depths)
-        const currentDepth = ((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 1;
-        const targetDepth = ((nextX + nextY) * 100) + nextZ * 100 + 1;
+        const currentDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 1);
+        const targetDepth = this.getDepth(nextX, nextY, nextZ, 1);
 
-        const currentShadowDepth = ((this.explorerPos.x + this.explorerPos.y) * 100) + this.explorerPos.z * 100 + 0.1;
-        const targetShadowDepth = ((nextX + nextY) * 100) + nextZ * 100 + 0.1;
+        const currentShadowDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 0.1);
+        const targetShadowDepth = this.getDepth(nextX, nextY, nextZ, 0.1);
 
         // Almacenar la posición inicial en pantalla
         const startY = this.explorer.y;
@@ -618,7 +643,36 @@ export class Game extends Scene {
         });
     }
 
+    getRotatedCoords(x: number, y: number): { rx: number, ry: number } {
+        const mapW = this.currentLevel ? this.currentLevel.map[0].length : 7;
+        const mapH = this.currentLevel ? this.currentLevel.map.length : 7;
+        let rx = x, ry = y;
+        if (this.cameraAngle === 1) { // 90 deg CW
+            rx = mapH - 1 - y;
+            ry = x;
+        } else if (this.cameraAngle === 2) { // 180 deg
+            rx = mapW - 1 - x;
+            ry = mapH - 1 - y;
+        } else if (this.cameraAngle === 3) { // 270 deg CW
+            rx = y;
+            ry = mapW - 1 - x;
+        }
+        return { rx, ry };
+    }
+
+    getDepth(x: number, y: number, z: number, offset: number = 0): number {
+        const { rx, ry } = this.getRotatedCoords(x, y);
+        // Priorizar rx+ry (profundidad en pantalla) sobre z (altura)
+        return ((rx + ry) * 100) + z * 10 + offset;
+    }
+
+    getVisualDirection(): number {
+        return (this.direction + this.cameraAngle) % 4;
+    }
+
     cartToIso(x: number, y: number, z: number) {
+        const { rx, ry } = this.getRotatedCoords(x, y);
+
         const tileW = 64;
         const tileH = 32;
         const hw = tileW / 2;
@@ -627,17 +681,22 @@ export class Game extends Scene {
         const cx = this.scale.width / 2;
         const cy = this.scale.height / 2;
 
-        const mapW = this.currentLevel ? this.currentLevel.map[0].length : 7;
-        const mapH = this.currentLevel ? this.currentLevel.map.length : 7;
+        let curMapW = this.currentLevel ? this.currentLevel.map[0].length : 7;
+        let curMapH = this.currentLevel ? this.currentLevel.map.length : 7;
+        if (this.cameraAngle === 1 || this.cameraAngle === 3) {
+            const temp = curMapW;
+            curMapW = curMapH;
+            curMapH = temp;
+        }
 
-        const mapCenterX = (mapW - 1) / 2;
-        const mapCenterY = (mapH - 1) / 2;
+        const mapCenterX = (curMapW - 1) / 2;
+        const mapCenterY = (curMapH - 1) / 2;
 
         const offsetX = cx - (mapCenterX - mapCenterY) * hw;
         const offsetY = cy - (mapCenterX + mapCenterY) * hh;
 
-        const tx = (x - y) * hw + offsetX;
-        const ty = (x + y) * hh + offsetY - (z * HEIGHT_STEP);
+        const tx = (rx - ry) * hw + offsetX;
+        const ty = (rx + ry) * hh + offsetY - (this.isTopDown ? 0 : z * HEIGHT_STEP);
 
         return { x: tx, y: ty };
     }
@@ -671,7 +730,7 @@ export class Game extends Scene {
 
                     const block = this.add.image(pos.x, pos.y, 'tiles', targetFrame);
                     block.setName(`${x},${y},${z}`);
-                    block.setDepth((x + y) * 100 + z * 100);
+                    block.setDepth(this.getDepth(x, y, z, 0));
                     this.mapObjects.push(block);
 
                     // Animación de caída de bloques
@@ -724,8 +783,9 @@ export class Game extends Scene {
 
     updateRotation() {
         if (!this.explorer || !this.explorer.active) return;
-        const dirKey = ['se', 'sw', 'nw', 'ne'][this.direction];
-        const idleFrame = this.direction * 4;
+        const visualDirection = this.getVisualDirection();
+        const dirKey = ['se', 'sw', 'nw', 'ne'][visualDirection];
+        const idleFrame = visualDirection * 4;
         this.explorer.stop();
         this.explorer.setFrame(idleFrame);
         this.explorer.play(`idle-${dirKey}`, true);
@@ -734,16 +794,26 @@ export class Game extends Scene {
         }
     }
 
-    updateGoalBeam(x: number, y: number, z: number, color: number | null) {
-        const beamName = `beam-${x},${y},${z}`;
-        const existingBeam = this.children.getByName(beamName);
-        if (existingBeam) {
-            existingBeam.destroy();
+    updateGoalBeam(x: number, y: number, z: number, color: number | null, animateIn: boolean = false) {
+        const beamName = `beam-${x}-${y}`;
+        
+        // Buscar y destruir beam existente
+        const existing = this.children.getByName(beamName);
+        if (existing) {
+            existing.setName('destroying-beam'); // Renombrar para evitar que getByName lo encuentre de nuevo
+            this.tweens.killTweensOf(existing);
+            this.tweens.add({
+                targets: existing,
+                alpha: 0,
+                duration: 200,
+                onComplete: () => { existing.destroy(); }
+            });
+            this.mapObjects = this.mapObjects.filter(o => o !== existing);
         }
 
-        if (color !== null) {
-            const pos = this.cartToIso(x, y, z);
+        if (color !== null && !this.isTopDown) {
             const graphics = this.add.graphics();
+            const pos = this.cartToIso(x, y, z);
 
             // Draw a volumetric cone using a stack of isometric ellipses
             // Drawn from top to bottom for correct depth blending
@@ -756,29 +826,209 @@ export class Game extends Scene {
                 const height = width / 2;
 
                 // Position goes up in the air (y decreases)
-                const y = pos.y - (-14) - (t * 60);
+                const sliceY = pos.y - (-14) - (t * 60);
 
                 // Alpha fades out as it goes higher
                 const sliceAlpha = 0.09 * (1 - t);
 
                 graphics.fillStyle(color, sliceAlpha);
-                graphics.fillEllipse(pos.x, y, width, height);
+                graphics.fillEllipse(pos.x, sliceY, width, height);
             }
 
             graphics.setBlendMode(Phaser.BlendModes.ADD);
-            graphics.setDepth(((x + y) * 100) + z * 100 + 0.5);
+            graphics.setDepth(this.getDepth(x, y, z, 0.5));
             graphics.setName(beamName);
 
             this.mapObjects.push(graphics);
 
             this.tweens.add({
                 targets: graphics,
-                alpha: { from: 0.5, to: 1 },
+                alpha: { from: animateIn ? 0 : 0.5, to: 1 },
                 duration: 1000,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut'
             });
+        }
+    }
+
+    rotateCamera(steps: number) {
+        if (this.isRunning || this.introAnimating || this.isRotating) return;
+        this.isRotating = true;
+
+        this.cameraAngle = (this.cameraAngle + steps) % 4;
+        if (this.cameraAngle < 0) this.cameraAngle += 4;
+
+        let tweensCount = 0;
+        let completedCount = 0;
+
+        const onComplete = () => {
+            completedCount++;
+            if (completedCount === tweensCount) {
+                this.isRotating = false;
+                this.updateRotation();
+            }
+        };
+
+        for (const obj of this.mapObjects) {
+            if (obj.name.startsWith('beam-')) {
+                obj.destroy();
+                continue;
+            }
+            
+            const parts = obj.name.split(',');
+            if (parts.length >= 3) {
+                const x = parseInt(parts[0]);
+                const y = parseInt(parts[1]);
+                const z = parseInt(parts[2]);
+                
+                const newPos = this.cartToIso(x, y, z);
+                const newDepth = this.getDepth(x, y, z, 0);
+                
+                tweensCount++;
+                this.tweens.add({
+                    targets: obj,
+                    x: newPos.x,
+                    y: newPos.y,
+                    duration: 400,
+                    ease: 'Cubic.easeInOut',
+                    onUpdate: (tween) => {
+                        const targetObj = obj as any;
+                        if (tween.progress > 0.5 && targetObj.depth !== newDepth) {
+                            targetObj.setDepth(newDepth);
+                        }
+                    },
+                    onComplete: onComplete
+                });
+            }
+        }
+        
+        if (this.explorer && this.explorer.active) {
+            const newPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
+            const newDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 1);
+            const newShadowDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 0.1);
+            
+            tweensCount += 2;
+            this.tweens.add({
+                targets: this.explorer,
+                x: newPos.x,
+                y: newPos.y,
+                duration: 400,
+                ease: 'Cubic.easeInOut',
+                onUpdate: (tween) => {
+                    if (tween.progress > 0.5 && this.explorer.depth !== newDepth) {
+                        this.explorer.setDepth(newDepth);
+                        this.updateRotation(); 
+                    }
+                },
+                onComplete: onComplete
+            });
+            this.tweens.add({
+                targets: this.shadow,
+                x: newPos.x,
+                y: newPos.y,
+                duration: 400,
+                ease: 'Cubic.easeInOut',
+                onUpdate: (tween) => {
+                    if (tween.progress > 0.5 && this.shadow.depth !== newShadowDepth) {
+                        this.shadow.setDepth(newShadowDepth);
+                    }
+                },
+                onComplete: onComplete
+            });
+        }
+        
+        this.time.delayedCall(450, () => {
+            this.mapObjects = this.mapObjects.filter(o => o.active);
+            for (const key of this.goalTiles) {
+                const [x, y] = key.split(',').map(Number);
+                const z = this.currentLevel!.map[y][x].h;
+                const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+                if (block) {
+                    if (block.frame.name === TILE.YELLOW.toString() || (block.frame.name as unknown as number) === TILE.YELLOW) {
+                         this.updateGoalBeam(x, y, z, 0xffff00);
+                    } else if (block.frame.name === TILE.BLUE.toString() || (block.frame.name as unknown as number) === TILE.BLUE) {
+                         this.updateGoalBeam(x, y, z, 0x00aaff);
+                    }
+                }
+            }
+        });
+        
+        if (tweensCount === 0) this.isRotating = false;
+    }
+
+    setTopDown(isTopDown: boolean) {
+        if (this.isRunning || this.introAnimating || this.isTopDown === isTopDown) return;
+        this.isTopDown = isTopDown;
+
+        for (const obj of this.mapObjects) {
+            if (obj.name.startsWith('beam-')) {
+                if (isTopDown) {
+                    obj.setName('destroying-beam');
+                    this.tweens.add({
+                        targets: obj,
+                        alpha: 0,
+                        duration: 300,
+                        onComplete: () => { obj.destroy(); }
+                    });
+                }
+                continue;
+            }
+            
+            const parts = obj.name.split(',');
+            if (parts.length >= 3) {
+                const x = parseInt(parts[0]);
+                const y = parseInt(parts[1]);
+                const z = parseInt(parts[2]);
+                
+                const newPos = this.cartToIso(x, y, z);
+
+                // Mover a posición aplanada o elevada
+                this.tweens.add({
+                    targets: obj,
+                    x: newPos.x,
+                    y: newPos.y,
+                    duration: 400,
+                    ease: 'Cubic.easeInOut'
+                });
+            }
+        }
+        
+        if (this.explorer && this.explorer.active) {
+            const newPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
+            
+            this.tweens.add({
+                targets: this.explorer,
+                x: newPos.x,
+                y: newPos.y,
+                duration: 400,
+                ease: 'Cubic.easeInOut'
+            });
+            this.tweens.add({
+                targets: this.shadow,
+                x: newPos.x,
+                y: newPos.y,
+                alpha: isTopDown ? 0 : 0.25,
+                duration: 400,
+                ease: 'Cubic.easeInOut'
+            });
+        }
+        
+        // Si volvemos a la normalidad, recrear los beams inmediatamente con fade-in
+        this.mapObjects = this.mapObjects.filter(o => o.active);
+        if (!isTopDown) {
+            for (const key of this.goalTiles) {
+                const [x, y] = key.split(',').map(Number);
+                const z = this.currentLevel!.map[y][x].h;
+                const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
+                if (block) {
+                    if (block.frame.name === TILE.YELLOW.toString() || (block.frame.name as unknown as number) === TILE.YELLOW) {
+                         this.updateGoalBeam(x, y, z, 0xffff00, true);
+                    } else if (block.frame.name === TILE.BLUE.toString() || (block.frame.name as unknown as number) === TILE.BLUE) {
+                         this.updateGoalBeam(x, y, z, 0x00aaff, true);
+                    }
+                }
+            }
         }
     }
 

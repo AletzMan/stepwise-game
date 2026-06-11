@@ -15,7 +15,7 @@ export const CommandButton = React.forwardRef<HTMLButtonElement, CommandButtonPr
         <button
             ref={ref}
             className={`
-                relative flex flex-row items-center justify-center gap-2 px-3 py-2
+                relative flex flex-row items-center justify-center gap-2 px-3 py-1.5
                 font-outfit font-black tracking-wide text-xs uppercase select-none
                 bg-bg-tertiary text-text-primary rounded-sm border border-b-3 border-(--cmd-color)/30
                 shadow-[0_3px_6px_rgba(0,0,0,0.4)]

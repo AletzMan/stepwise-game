@@ -148,6 +148,26 @@ export const TUTORIAL_STEPS_LVL31: DriveStep[] = [
 
 ];
 
+export const TUTORIAL_STEPS_LVL38: DriveStep[] = [
+    {
+        element: '#command-palette',
+        popover: {
+            title: "f3",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+    {
+        element: '#command-palette',
+        popover: {
+            title: "f3Two",
+            side: "bottom",
+            align: 'center'
+        }
+    },
+
+];
+
 
 export const TUTORIAL_CONFIG = {
     showProgress: true,
