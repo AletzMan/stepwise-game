@@ -17,11 +17,11 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
     const navigate = useNavigate();
 
     return (
-        <header id="header" className="relative flex items-center justify-between gap-1 py-2 px-2 bg-linear-to-r from-bg-secondary via-bg-primary/90 to-bg-secondary rounded-sm border border-border-custom min-h-[58px] select-none">
+        <header id="header" className="relative flex items-center justify-between gap-1 py-0.5 px-2 bg-linear-to-r from-bg-secondary via-bg-primary/90 to-bg-secondary rounded-sm border border-border-custom min-h-[58px] select-none">
             {/* Línea decorativa sutil inferior de tecnología */}
             <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-accent-cyan/30 to-transparent" />
 
-            <div className="flex flex-row gap-1 items-center">
+            <div className="flex flex-row gap-1 items-center sm:min-w-[148px]">
                 <NavLink
                     to="/"
                     title={t('levels.back')}
@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
                 >
                     <LogoSteps className="w-14 md:w-20 h-14" />
 
-                    <h1 className="font-['Titan_One'] text-lg hidden md:block bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-full wrap-break-word">
+                    <h1 className="font-['Titan_One'] text-lg hidden sm:block bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-full wrap-break-word">
                         STEP
                         <span className="bg-linear-to-r from-accent-cyan via-accent-cyan to-accent-purple bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(34,211,238,0.35)]">
                             WISE
@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
             </div>
 
             {/* Derecha: Acciones */}
-            <div className="flex flex-col-reverse md:flex-row items-center gap-2 ">
+            <div className="flex flex-col-reverse sm:flex-row items-center gap-2 ">
                 {/* Botón de Niveles */}
                 <Button
                     intent="accent"

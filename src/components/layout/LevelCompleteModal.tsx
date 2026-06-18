@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../ui/Button';
-import { ChevronRight, LayoutGrid, RotateCcw, RefreshCw } from 'lucide-react';
+import { ChevronRight, LayoutGrid, RotateCcw, RefreshCw, Star } from 'lucide-react';
 import { LevelData } from '../../game/levels';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -30,7 +30,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
             open
         >
             <div
-                className="relative overflow-hidden w-[400px] rounded-xl border border-accent-cyan/15 bg-linear-to-b from-bg-secondary via-bg-primary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_50px_-10px_color-mix(in_srgb,var(--color-accent-cyan)_10%,transparent)] animate-slide-up"
+                className="relative overflow-hidden w-[350px] md:w-[500px] rounded-xl border border-accent-cyan/15 bg-linear-to-b from-bg-secondary via-bg-primary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_50px_-10px_color-mix(in_srgb,var(--color-accent-cyan)_10%,transparent)] animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Línea decorativa superior */}
@@ -57,7 +57,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                         <div className="flex gap-4 text-5xl">
                             {Array.from({ length: 3 }).map((_, i) => (
                                 <div key={i} className={`scale-90 opacity-15 grayscale brightness-50 ${i !== 1 ? 'pt-2' : ''}`}>
-                                    ⭐
+                                    <Star size={45} fill="currentColor" />
                                 </div>
                             ))}
                         </div>
@@ -69,8 +69,8 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                                     className="star-animate"
                                     style={{ opacity: i < stars ? 1 : 0 }}
                                 >
-                                    <div  >
-                                        ⭐
+                                    <div>
+                                        <Star size={45} fill="currentColor" />
                                     </div>
                                 </div>
                             ))}

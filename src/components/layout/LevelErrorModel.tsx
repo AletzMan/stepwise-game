@@ -31,7 +31,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
             open
         >
             <div
-                className="relative overflow-hidden w-[380px] rounded-xl border border-accent-red/15 bg-linear-to-b from-bg-secondary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_color-mix(in_srgb,var(--color-accent-red)_8%,transparent)] animate-slide-up"
+                className="relative overflow-hidden w-[350px] md:w-[500px] rounded-xl border border-accent-red/15 bg-linear-to-b from-bg-secondary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_color-mix(in_srgb,var(--color-accent-red)_8%,transparent)] animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Línea decorativa superior con tu rojo de acento */}
