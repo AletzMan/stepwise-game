@@ -2,8 +2,9 @@ import React from "react";
 import { NavLink } from "react-router";
 import { Lock, Star } from "lucide-react";
 import { t } from "i18next";
+import { DifficultyLevel } from "../../game/types/game";
 
-type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
+
 
 interface ThemeVariant {
     bg: string;

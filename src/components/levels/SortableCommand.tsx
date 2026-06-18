@@ -24,7 +24,7 @@ export default function SortableCommand({ index, id, cmd, value, slot, isRunning
             ref={cmd ? setElement : undefined}
             data-shadow={isDragging}
             data-id={id}
-            className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all duration-200 relative cursor-pointer
+            className={`w-7 h-7 flex items-center justify-center rounded-sm transition-all duration-200 relative cursor-pointer
                                 ${cmd
                     ? 'bg-(--cmd-color)/5 border border-b-[3px] border-(--cmd-color)/20 cmd-btn-hover active:translate-y-px active:border-b'
                     : 'bg-black/20 border border-dashed border-(--queue-color)/25 hover:border-(--queue-color)/30'
