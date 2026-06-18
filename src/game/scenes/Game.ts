@@ -564,7 +564,6 @@ export class Game extends Scene {
                     if (this.explorer.anims) {
                         this.explorer.anims.timeScale = this.executionSpeed;
                     }
-                    //this.startIdleFloating();
                     resolve();
                 });
             });
@@ -701,11 +700,6 @@ export class Game extends Scene {
         return { x: tx, y: ty };
     }
 
-    /**
-     * Crea el mapa isométrico. Si `animate` es true, los bloques caen desde
-     * arriba con un efecto de rebote escalonado (de atrás hacia adelante).
-     * Devuelve la duración total de la animación en ms (0 si no hay animación).
-     */
     createMap(mapData: TileInfo[][], animate: boolean = false): number {
         const pendingBeams: { x: number; y: number; z: number; color: number }[] = [];
         let maxAnimEnd = 0;
@@ -796,7 +790,7 @@ export class Game extends Scene {
 
     updateGoalBeam(x: number, y: number, z: number, color: number | null, animateIn: boolean = false) {
         const beamName = `beam-${x}-${y}`;
-        
+
         // Buscar y destruir beam existente
         const existing = this.children.getByName(beamName);
         if (existing) {
@@ -815,20 +809,18 @@ export class Game extends Scene {
             const graphics = this.add.graphics();
             const pos = this.cartToIso(x, y, z);
 
-            // Draw a volumetric cone using a stack of isometric ellipses
-            // Drawn from top to bottom for correct depth blending
             const steps = 40;
             for (let i = steps - 1; i >= 0; i--) {
-                const t = i / (steps - 1); // 0 is bottom, 1 is top
+                const t = i / (steps - 1);
 
-                // Isometric ellipse width and height (height is half of width)
-                const width = 18 + (t * 26); // 30 at bottom, 56 at top
+                // Elipse isométrica: ancho y alto (alto es la mitad del ancho)
+                const width = 18 + (t * 26);
                 const height = width / 2;
 
-                // Position goes up in the air (y decreases)
+                // Posición que sube en el aire (y disminuye)
                 const sliceY = pos.y - (-14) - (t * 60);
 
-                // Alpha fades out as it goes higher
+                // Alpha disminuye conforme sube
                 const sliceAlpha = 0.09 * (1 - t);
 
                 graphics.fillStyle(color, sliceAlpha);
@@ -875,16 +867,16 @@ export class Game extends Scene {
                 obj.destroy();
                 continue;
             }
-            
+
             const parts = obj.name.split(',');
             if (parts.length >= 3) {
                 const x = parseInt(parts[0]);
                 const y = parseInt(parts[1]);
                 const z = parseInt(parts[2]);
-                
+
                 const newPos = this.cartToIso(x, y, z);
                 const newDepth = this.getDepth(x, y, z, 0);
-                
+
                 tweensCount++;
                 this.tweens.add({
                     targets: obj,
@@ -902,12 +894,12 @@ export class Game extends Scene {
                 });
             }
         }
-        
+
         if (this.explorer && this.explorer.active) {
             const newPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
             const newDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 1);
             const newShadowDepth = this.getDepth(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z, 0.1);
-            
+
             tweensCount += 2;
             this.tweens.add({
                 targets: this.explorer,
@@ -918,7 +910,7 @@ export class Game extends Scene {
                 onUpdate: (tween) => {
                     if (tween.progress > 0.5 && this.explorer.depth !== newDepth) {
                         this.explorer.setDepth(newDepth);
-                        this.updateRotation(); 
+                        this.updateRotation();
                     }
                 },
                 onComplete: onComplete
@@ -937,7 +929,7 @@ export class Game extends Scene {
                 onComplete: onComplete
             });
         }
-        
+
         this.time.delayedCall(450, () => {
             this.mapObjects = this.mapObjects.filter(o => o.active);
             for (const key of this.goalTiles) {
@@ -946,14 +938,14 @@ export class Game extends Scene {
                 const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
                 if (block) {
                     if (block.frame.name === TILE.YELLOW.toString() || (block.frame.name as unknown as number) === TILE.YELLOW) {
-                         this.updateGoalBeam(x, y, z, 0xffff00);
+                        this.updateGoalBeam(x, y, z, 0xffff00);
                     } else if (block.frame.name === TILE.BLUE.toString() || (block.frame.name as unknown as number) === TILE.BLUE) {
-                         this.updateGoalBeam(x, y, z, 0x00aaff);
+                        this.updateGoalBeam(x, y, z, 0x00aaff);
                     }
                 }
             }
         });
-        
+
         if (tweensCount === 0) this.isRotating = false;
     }
 
@@ -974,13 +966,13 @@ export class Game extends Scene {
                 }
                 continue;
             }
-            
+
             const parts = obj.name.split(',');
             if (parts.length >= 3) {
                 const x = parseInt(parts[0]);
                 const y = parseInt(parts[1]);
                 const z = parseInt(parts[2]);
-                
+
                 const newPos = this.cartToIso(x, y, z);
 
                 // Mover a posición aplanada o elevada
@@ -993,10 +985,10 @@ export class Game extends Scene {
                 });
             }
         }
-        
+
         if (this.explorer && this.explorer.active) {
             const newPos = this.cartToIso(this.explorerPos.x, this.explorerPos.y, this.explorerPos.z);
-            
+
             this.tweens.add({
                 targets: this.explorer,
                 x: newPos.x,
@@ -1013,7 +1005,7 @@ export class Game extends Scene {
                 ease: 'Cubic.easeInOut'
             });
         }
-        
+
         // Si volvemos a la normalidad, recrear los beams inmediatamente con fade-in
         this.mapObjects = this.mapObjects.filter(o => o.active);
         if (!isTopDown) {
@@ -1023,9 +1015,9 @@ export class Game extends Scene {
                 const block = this.children.getByName(`${x},${y},${z}`) as Phaser.GameObjects.Image;
                 if (block) {
                     if (block.frame.name === TILE.YELLOW.toString() || (block.frame.name as unknown as number) === TILE.YELLOW) {
-                         this.updateGoalBeam(x, y, z, 0xffff00, true);
+                        this.updateGoalBeam(x, y, z, 0xffff00, true);
                     } else if (block.frame.name === TILE.BLUE.toString() || (block.frame.name as unknown as number) === TILE.BLUE) {
-                         this.updateGoalBeam(x, y, z, 0x00aaff, true);
+                        this.updateGoalBeam(x, y, z, 0x00aaff, true);
                     }
                 }
             }

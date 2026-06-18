@@ -4,35 +4,20 @@
 
 
 @theme {
-  /* FONDOS: Cambiamos el azul espacial por un gris pizarra con tinte Teal profundo.
-     Este tono es el puente perfecto entre la naturaleza verde/tierra y el neón cian. */
   --color-bg-primary: #0a0f14;
-  /* Fondo absoluto (Gris azulado profundo, ultra limpio) */
   --color-bg-secondary: #121820;
-  /* Contenedores principales (Da el contraste perfecto con los sprites) */
   --color-bg-panel: #0e131a;
-  /* Fondo oscuro para las colas de comandos (MAIN, F1) */
   --color-bg-tertiary: #1b232e;
-  /* Botones por defecto y fichas base */
 
-  /* BORDES: Más integrados, reduciendo la saturación para no distraer del juego */
   --color-border-custom: rgba(141, 162, 187, 0.12);
-  /* Un gris azulado traslúcido muy fino */
   --color-border-glow: rgba(34, 211, 238, 0.15);
-  /* Destello cian controlado para elementos activos */
 
-  /* TEXTOS: Adaptados para que se lean perfectos sobre el nuevo fondo */
   --color-text-primary: #f1f5f9;
-  /* Blanco pizarra de alto contraste */
   --color-text-secondary: #94a3b8;
-  /* Gris medio para etiquetas limpias */
   --color-text-muted: #475569;
-  /* Sockets vacíos y deshabilitados */
 
-  /* ACENTOS: Tus neones originales (Se quedan intactos, porque contrastan perfecto aquí) */
   --color-accent-cyan: #22d3ee;
   --color-accent-green: #7ccf00;
-  /* Convertir a HEX */
   --color-accent-red: #f87171;
   --color-accent-yellow: #fbbf24;
   --color-accent-purple: #a78bfa;
