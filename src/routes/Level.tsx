@@ -19,6 +19,7 @@ import { ProgramSlot } from '../game/types/game';
 import SortableCommand from '../components/levels/SortableCommand';
 import { DragDropProvider } from '@dnd-kit/react';
 import { move } from '@dnd-kit/helpers';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 export interface QueueItem {
     id: number;
@@ -55,6 +56,7 @@ export function Level() {
     const executedCommands = useRef<number>(0); // Numero total de comandos ejecutados en el nivel actual
     const setLevels = useGameStore((state) => state.setLevels);
     const levels = useGameStore((state) => state.levels);
+    const isMobileLandscape = useMediaQuery("(max-width: 932px) and (orientation: landscape)");
 
     const getStatusText = useCallback((status: string) => {
         if (status === 'incomplete') {
@@ -170,6 +172,7 @@ export function Level() {
         };
     }, []);
 
+
     useEffect(() => {
         EventBus.emit('set-speed', speed);
     }, [speed]);
@@ -195,23 +198,29 @@ export function Level() {
         console.log("ENTRO")
 
         let steps: DriveStep[] = []
-        if (currentLevel?.id === 1) {
-            steps = TUTORIAL_STEPS_LVL1
-        }
-        else if (currentLevel?.id === 11) {
-            steps = TUTORIAL_STEPS_LVL11
-        }
-        else if (currentLevel?.id === 21) {
-            steps = TUTORIAL_STEPS_LVL21
-        }
-        else if (currentLevel?.id === 26) {
-            steps = TUTORIAL_STEPS_LVL26
-        }
-        else if (currentLevel?.id === 31) {
-            steps = TUTORIAL_STEPS_LVL31
-        }
-        else if (currentLevel?.id === 38) {
-            steps = TUTORIAL_STEPS_LVL38
+
+        switch (currentLevel?.id) {
+            case 1:
+                steps = TUTORIAL_STEPS_LVL1
+                break
+            case 11:
+                steps = TUTORIAL_STEPS_LVL11
+                break
+            case 21:
+                steps = TUTORIAL_STEPS_LVL21
+                break
+            case 26:
+                steps = TUTORIAL_STEPS_LVL26
+                break
+            case 31:
+                steps = TUTORIAL_STEPS_LVL31
+                break
+            case 38:
+                steps = TUTORIAL_STEPS_LVL38
+                break
+            default:
+                steps = []
+                break
         }
 
         const timer = setTimeout(() => {
@@ -350,9 +359,6 @@ export function Level() {
     const sceneReady = useRef(false);
 
     const currentScene = (_scene: Phaser.Scene) => {
-        // La escena de Phaser está lista; marcarla como tal.
-        // No emitimos 'load-level' aquí porque Game.create() ya carga
-        // el nivel basándose en la URL del navegador al inicializarse.
         sceneReady.current = true;
     };
 
@@ -431,7 +437,7 @@ export function Level() {
         return (
             <div
                 id={`queue-${slot}`}
-                className={`p-3 bg-bg-secondary/60 border rounded-sm cursor-pointer transition-all duration-300 select-none queue-sec-hover
+                className={`relative p-1.5 bg-bg-secondary/60 border rounded-sm cursor-pointer transition-all duration-300 select-none queue-sec-hover
                 ${isActive
                         ? 'border-(--queue-color)/40 bg-linear-to-b from-bg-secondary to-bg-tertiary/80 shadow-[0_4px_20px_-5px_color-mix(in_srgb,var(--queue-color)_15%,transparent)]'
                         : 'border-border-custom/50 hover:border-border-custom'
@@ -439,72 +445,100 @@ export function Level() {
                 onClick={() => !isRunning && setActiveSlot(slot)}
                 style={{ '--queue-color': color } as React.CSSProperties}
             >
-                {/* Header de la Secuencia */}
-                <div className="flex items-center gap-2 mb-2.5">
-                    {/* Indicador de Activación visual */}
-                    <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${isActive ? 'bg-(--queue-color) shadow-[0_0_8px_var(--queue-color)]' : 'bg-text-muted/30'}`} />
 
-                    <span className="font-jetbrains text-[0.7rem] font-black uppercase tracking-[0.15em] text-(--queue-color)">
-                        {label}
-                    </span>
-
-                    <span className="font-jetbrains text-[0.65rem] font-bold text-text-secondary/80 bg-bg-tertiary/60 px-1.5 py-0.5 rounded-md border border-border-custom/30 ml-auto">
-                        {queue.length}<span className="text-text-muted/50 mx-0.5">/</span>{maxSlots}
-                    </span>
-
-                    {!isRunning && queue.length > 0 && (
-                        <Button
-                            intent="ghost"
-                            color="red"
-                            size="none"
-                            className="w-5 h-5 rounded-md text-[10px] hover:bg-accent-red/20 hover:text-accent-red transition-colors flex items-center justify-center font-black"
-                            onClick={(e) => { e.stopPropagation(); clearQueue(slot); }}
-                        >
-                            ✕
-                        </Button>
-                    )}
-                </div>
-
-                {/* Grilla de Slots */}
-                <DragDropProvider
-                    onDragEnd={(event) => {
-                        if (isRunning) return;
-                        setQueue(slot, move(queue, event));
+                {/* 1. BOTÓN ELIMINAR FIJO SUPERIOR (Accesible en móvil, tamaño compacto) */}
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        clearQueue(slot);
                     }}
+                    disabled={isRunning || queue.length === 0}
+                    className={`absolute top-0 -right-2.5 -translate-x-1/2 w-5 h-5 flex items-center justify-center rounded-full border transition-all duration-200
+                                ${queue.length === 0 || isRunning
+                            ? 'opacity-10 text-text-muted/20 border-transparent pointer-events-none'
+                            : 'opacity-75 bg-slate-950 border-zinc-700 text-zinc-400 hover:text-rose-400 hover:border-rose-500/30 active:scale-90 cursor-pointer'
+                        }`}
+                    title="Limpiar secuencia"
                 >
-                    <div className="flex flex-wrap gap-1.5 p-1 bg-black/15 border border-black/10 rounded-md">
-                        {Array.from({ length: maxSlots }).map((_, i) => {
-                            const item = queue[i];
-                            const isHighlighted = isRunning && executionStack.some(frame => frame.slot === slot && frame.index === i);
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                    </svg>
+                </button>
+                <div className="flex flex-row gap-2 w-full h-full">
 
-                            return (
-                                <SortableCommand
-                                    key={item ? item.id : `empty-${i}`}
-                                    index={i}
-                                    id={item ? item.id : -(i + 1)}
-                                    cmd={item?.cmd}
-                                    value={item?.value}
-                                    slot={slot}
-                                    isRunning={isRunning}
-                                    isHighlighted={isHighlighted}
-                                    removeCommand={removeCommand}
-                                />
-                            );
-                        })}
+                    {/* PESTAÑA LATERAL BALANCEADA (Perfecta para Mobile y cambios de idioma) */}
+                    <div className={`relative flex flex-col items-center justify-between py-4 px-1 rounded-md border shrink-0 w-6 transition-all duration-300 
+                        ${isActive
+                            ? 'bg-(--queue-color)/10 border-(--queue-color)/40 shadow-[inset_0_0_8px_color-mix(in_srgb,var(--queue-color)_15%,transparent)]'
+                            : 'bg-black/20 border-border-custom/20'
+                        }`}
+                    >
+
+
+                        {/* 2. TEXTO VERTICAL (Controla dinámicamente el tamaño para que nunca se desborde) */}
+                        <span className={`font-jetbrains font-black uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 transition-all duration-300 my-auto
+                            ${label.length > 5 ? 'text-[0.55rem]' : 'text-[0.7rem]'}
+                            ${isActive ? 'text-(--queue-color) drop-shadow-[0_0_6px_var(--queue-color)]' : 'text-text-secondary/50'}`}
+                        >
+                            {label}
+                        </span>
+
+                        {/* 3. TU CONTADOR FAVORITO (Píldora horizontal fija abajo) */}
+                        <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 font-jetbrains text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-md scale-90 transition-all duration-300
+                            ${isActive
+                                ? 'bg-slate-900 text-white border-(--queue-color)/40'
+                                : 'text-text-secondary bg-bg-tertiary border-border-custom/40'
+                            }`}
+                        >
+                            <span>{queue.length}</span>
+                            <span className="mx-0.5 opacity-40">/</span>
+                            <span className={isActive ? 'text-(--queue-color)' : 'text-text-muted'}>{maxSlots}</span>
+                        </div>
                     </div>
-                </DragDropProvider>
+
+                    {/* Grilla de Slots */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <DragDropProvider
+                            onDragEnd={(event) => {
+                                if (isRunning) return;
+                                setQueue(slot, move(queue, event));
+                            }}
+                        >
+                            <div className="flex flex-wrap gap-1.5 p-1 bg-black/15 border border-black/10 rounded-md">
+                                {Array.from({ length: maxSlots }).map((_, i) => {
+                                    const item = queue[i];
+                                    const isHighlighted = isRunning && executionStack.some(frame => frame.slot === slot && frame.index === i);
+
+                                    return (
+                                        <SortableCommand
+                                            key={item ? item.id : `empty-${i}`}
+                                            index={i}
+                                            id={item ? item.id : -(i + 1)}
+                                            cmd={item?.cmd}
+                                            value={item?.value}
+                                            slot={slot}
+                                            isRunning={isRunning}
+                                            isHighlighted={isHighlighted}
+                                            removeCommand={removeCommand}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </DragDropProvider>
+                    </div>
+                </div>
             </div>
         );
     };
-
 
     return (
         <div id="app" className="w-full h-screen flex justify-center items-center">
             <div className="flex flex-col w-full max-w-[1280px] h-screen p-2 gap-2">
                 {/* Encabezado */}
-                <Header
+                {!isMobileLandscape && <Header
                     levelInfo={levelInfo}
-                />
+                />}
 
                 {/* Superposición de estado del nivel */}
                 {showStatusLevel && (
@@ -558,18 +592,114 @@ export function Level() {
                 )}
 
                 {/* Contenido principal */}
-                <div className="flex flex-col min-[901px]:flex-row gap-2 flex-1 min-h-0">
+                <div className="flex flex-col min-[640px]:flex-row gap-2 flex-1 min-h-0">
                     {/* Lienzo de Phaser (Canvas) */}
-                    <div id="phaser-canvas" className="flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary flex items-center justify-center max-[900px]:min-h-[300px]">
+                    <div id="phaser-canvas" className="relative flex-1 rounded-sm overflow-hidden border border-border-custom bg-bg-secondary flex items-center justify-center max-[640px]:min-h-[300px]">
                         <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
+
+                        {/* Velocidad */}
+                        <div className="absolute top-1 left-1 flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
+                            <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
+                                {t('app.speed')}
+                            </span>
+                            <div id="speed-buttons" className="flex gap-1">
+                                {[0.5, 1, 2].map(s => (
+                                    <Button
+                                        key={s}
+                                        intent={speed === s ? "solid" : "ghost"}
+                                        color={speed === s ? "green" : "cyan"}
+                                        size="none"
+                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                        onClick={() => setSpeed(s)}
+                                    >
+                                        {s === 0.5 ? '0.5x' : s === 1 ? '1x' : '2x'}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Cámara */}
+                        <div className=" absolute top-1 right-1 flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
+                            <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
+                                {t('app.camera', { defaultValue: 'Cámara' })}
+                            </span>
+                            <div id="camera-buttons" className="flex gap-1">
+                                <Button
+                                    intent={isTopDown ? "solid" : "ghost"}
+                                    color="cyan"
+                                    size="none"
+                                    className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                    onMouseDown={toggleDownPlatform}
+                                    onMouseUp={toggleTopPlatform}
+                                    onMouseLeave={toggleTopPlatform}
+                                >
+                                    <Layers size={16} />
+                                </Button>
+                                <Button
+                                    intent="ghost"
+                                    color="cyan"
+                                    size="none"
+                                    className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                    onClick={() => EventBus.emit('rotate-camera', 3)}
+                                >
+                                    <RotateCcw size={16} />
+                                </Button>
+                                <Button
+                                    intent="ghost"
+                                    color="cyan"
+                                    size="none"
+                                    className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
+                                    onClick={() => EventBus.emit('rotate-camera', 1)}
+                                >
+                                    <RotateCw size={16} />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div id="control-buttons" className=" absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-3 p-1 bg-black/10 border border-border-custom/20 rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                            {!isRunning ? (
+                                <Button
+                                    intent="solid"
+                                    color="green"
+                                    size="sm"
+                                    className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-green)_30%,transparent)]"
+                                    onClick={handleRun}
+                                    disabled={mainQueue.length === 0}
+                                >
+                                    <Play size={18} strokeWidth={3} className="fill-bg-primary stroke-bg-primary" />
+                                    <span>{t('app.btn_run')}</span>
+                                </Button>
+                            ) : (
+                                <Button
+                                    intent="solid"
+                                    color="red"
+                                    size="sm"
+                                    className="flex-1 font-black text-xs tracking-widest rounded-lg animate-pulse shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-red)_30%,transparent)]"
+                                    onClick={handleStop}
+                                >
+                                    <Square size={18} strokeWidth={3} className="fill-white" />
+                                    <span>{t('app.btn_stop')}</span>
+                                </Button>
+                            )}
+
+                            <Button
+                                intent="solid"
+                                color="yellow"
+                                size="sm"
+                                className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
+                                onClick={() => handleLoadLevel(levelInfo?.id ?? 1)}
+                            >
+                                <EraserIcon size={18} strokeWidth={3} />
+                                <span>{t('app.btn_clear')}</span>
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Panel de programación */}
-                    <div className="w-[340px] max-[900px]:w-full flex flex-col gap-2 min-h-0 max-[900px]:max-h-[45vh]">
+                    <div className="w-[328px] max-[640px]:w-full flex flex-col gap-2 min-h-0 max-[640px]:max-h-[45vh]">
 
                         {/* Paleta de comandos */}
-                        <div id="command-palette" className="p-3 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
-                            <div className="font-jetbrains text-[0.65rem] font-semibold uppercase tracking-[2px] text-text-muted mb-2.5">
+                        <div id="command-palette" className="p-1.5 bg-linear-to-br from-bg-secondary to-bg-tertiary border border-border-custom rounded-sm">
+                            <div className="pl-1 font-jetbrains text-[0.65rem] font-semibold uppercase tracking-[2px] text-text-muted mb-1.5">
                                 {t('app.commands_title')}
                             </div>
                             <div className="grid grid-cols-3 gap-1.5">
@@ -602,100 +732,9 @@ export function Level() {
                         </div>
 
                         {/* Botones de control */}
-                        <div className="flex flex-col gap-3 p-3 bg-bg-tertiary border border-border-custom rounded-sm">
-                            <div className="flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
-                                <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
-                                    {t('app.camera', { defaultValue: 'Cámara' })}
-                                </span>
-                                <div id="camera-buttons" className="flex gap-1">
-                                    <Button
-                                        intent={isTopDown ? "solid" : "ghost"}
-                                        color="cyan"
-                                        size="none"
-                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
-                                        onMouseDown={toggleDownPlatform}
-                                        onMouseUp={toggleTopPlatform}
-                                        onMouseLeave={toggleTopPlatform}
-                                    >
-                                        <Layers size={16} />
-                                    </Button>
-                                    <Button
-                                        intent="ghost"
-                                        color="cyan"
-                                        size="none"
-                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
-                                        onClick={() => EventBus.emit('rotate-camera', 3)}
-                                    >
-                                        <RotateCcw size={16} />
-                                    </Button>
-                                    <Button
-                                        intent="ghost"
-                                        color="cyan"
-                                        size="none"
-                                        className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
-                                        onClick={() => EventBus.emit('rotate-camera', 1)}
-                                    >
-                                        <RotateCw size={16} />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between py-1 px-2 bg-black/20 rounded-sm">
-                                <span className="font-jetbrains text-[0.65rem] font-semibold uppercase text-text-muted">
-                                    {t('app.speed')}
-                                </span>
-                                <div id="speed-buttons" className="flex gap-1">
-                                    {[0.5, 1, 2].map(s => (
-                                        <Button
-                                            key={s}
-                                            intent={speed === s ? "solid" : "ghost"}
-                                            color={speed === s ? "green" : "cyan"}
-                                            size="none"
-                                            className="py-1 px-2.5 text-[0.7rem] font-jetbrains rounded-xs! shadow-none"
-                                            onClick={() => setSpeed(s)}
-                                        >
-                                            {s === 0.5 ? '0.5x' : s === 1 ? '1x' : '2x'}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div id="control-buttons" className="flex gap-3 p-1 bg-black/10 border border-border-custom/20 rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
-                                {!isRunning ? (
-                                    <Button
-                                        intent="solid"
-                                        color="green"
-                                        size="md"
-                                        className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-green)_30%,transparent)]"
-                                        onClick={handleRun}
-                                        disabled={mainQueue.length === 0}
-                                    >
-                                        <Play size={18} strokeWidth={3} className="fill-bg-primary stroke-bg-primary" />
-                                        <span>{t('app.btn_run')}</span>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        intent="solid"
-                                        color="red"
-                                        size="md"
-                                        className="flex-1 font-black text-xs tracking-widest rounded-lg animate-pulse shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-red)_30%,transparent)]"
-                                        onClick={handleStop}
-                                    >
-                                        <Square size={18} strokeWidth={3} className="fill-white" />
-                                        <span>{t('app.btn_stop')}</span>
-                                    </Button>
-                                )}
+                        {/* <div className="flex flex-col gap-3 p-3 bg-bg-tertiary border border-border-custom rounded-sm">
 
-                                <Button
-                                    intent="solid"
-                                    color="yellow"
-                                    size="md"
-                                    className="flex-1 font-black text-xs tracking-widest rounded-lg shadow-[0_4px_15px_color-mix(in_srgb,var(--color-accent-yellow)_30%,transparent)]"
-                                    onClick={() => handleLoadLevel(levelInfo?.id ?? 1)}
-                                >
-                                    <EraserIcon size={18} strokeWidth={3} />
-                                    <span>{t('app.btn_clear')}</span>
-                                </Button>
-                            </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
