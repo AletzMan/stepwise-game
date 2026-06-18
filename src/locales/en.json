@@ -57,9 +57,11 @@
       }
     },
     "levels": {
-      "tag": "TRAVEL MAP",
-      "title": "CHALLENGES",
-      "subtitle": "Select a sector to start",
+      "tag": "CENTRAL ACCESS",
+      "title": "LEVELS",
+      "subtitle": "Select a sector to start the simulation",
+      "noMoreLevels": "NO MORE LEVELS AVAILABLE",
+      "moreLevels": "More levels will be available soon. Thank you for playing!",
       "difficulty": {
         "easy": "RECRUIT",
         "medium": "INITIATE",

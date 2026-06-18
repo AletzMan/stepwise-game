@@ -14,7 +14,7 @@
       "program_finished_incomplete": "Programa terminado — no se activaron todos los objetivos",
       "error_prefix": "{{message}}",
       "queues": {
-        "main": "PRINCIPAL",
+        "main": "MAIN",
         "f1": "F1",
         "f2": "F2",
         "f3": "F3"
@@ -57,9 +57,11 @@
       }
     },
     "levels": {
-      "tag": "MAPA DE VIAJE",
-      "title": "DESAFÍOS",
-      "subtitle": "Selecciona un sector para comenzar",
+      "tag": "ACCESO CENTRAL",
+      "title": "NIVELES",
+      "subtitle": "Selecciona un sector para iniciar la simulación",
+      "noMoreLevels": "NO HAY MÁS NIVELES DISPONIBLES",
+      "moreLevels": "Habrá más niveles disponibles próximamente. ¡Gracias por jugar!",
       "difficulty": {
         "easy": "RECLUTA",
         "medium": "INICIADO",
