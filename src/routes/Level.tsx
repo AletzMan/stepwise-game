@@ -409,7 +409,8 @@ export function Level() {
     // Filtrar comandos: no mostrar F1/F2/F3 en sus propios paneles para evitar la recursión directa
     const getAvailableCommandsForSlot = (slot: ProgramSlot): Command[] => {
         if (!levelInfo) return [];
-        return levelInfo.availableCommands.filter(cmd => {
+        const uniqueCommands = Array.from(new Set(levelInfo.availableCommands));
+        return uniqueCommands.filter(cmd => {
             if (slot === 'f1' && cmd === 'F1') return false;
             if (slot === 'f2' && cmd === 'F2') return false;
             if (slot === 'f3' && cmd === 'F3') return false;
