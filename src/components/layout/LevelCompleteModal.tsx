@@ -39,7 +39,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                 {/* Destello de fondo */}
                 <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-56 h-56 bg-accent-green/10 blur-[80px] rounded-full pointer-events-none" />
 
-                <div className="relative px-6 pt-8 pb-6 text-center">
+                <div className="relative px-5 pt-4 pb-4 text-center">
 
                     {/* Header */}
                     <div className="space-y-1">
@@ -52,12 +52,12 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                     </div>
 
                     {/* Contenedor de Estrellas Original e Idéntico en Estructura */}
-                    <div className="relative flex justify-center my-6">
+                    <div className="relative flex justify-center my-2">
                         {/* Fondo apagado original */}
                         <div className="flex gap-4 text-5xl">
                             {Array.from({ length: 3 }).map((_, i) => (
                                 <div key={i} className={`scale-90 opacity-15 grayscale brightness-50 ${i !== 1 ? 'pt-2' : ''}`}>
-                                    <Star size={45} fill="currentColor" />
+                                    <Star size={40} fill="currentColor" />
                                 </div>
                             ))}
                         </div>
@@ -70,7 +70,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                                     style={{ opacity: i < stars ? 1 : 0 }}
                                 >
                                     <div>
-                                        <Star size={45} fill="currentColor" />
+                                        <Star size={40} fill="currentColor" />
                                     </div>
                                 </div>
                             ))}
@@ -82,20 +82,20 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                     </p>
 
                     {/* Tarjetas de Stats */}
-                    <div className="grid grid-cols-3 gap-2.5 mt-6 p-1.5 bg-bg-tertiary/30 border border-border-custom/50 rounded-xl">
-                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-2.5">
+                    <div className="grid grid-cols-3 gap-2.5 mt-3 p-1.5 bg-bg-tertiary/30 border border-border-custom/50 rounded-xl">
+                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-1.5">
                             <p className="text-[10px] font-bold text-text-secondary tracking-wider uppercase">
                                 {t('modals.level_complete.stats.moves')}
                             </p>
                             <p className="text-lg font-black text-text-primary mt-0.5">{executedCommands.current}</p>
                         </div>
-                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-2.5">
+                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-1.5">
                             <p className="text-[10px] font-bold text-text-secondary tracking-wider uppercase">
                                 {t('modals.level_complete.stats.time')}
                             </p>
                             <p className="text-lg font-black text-text-primary mt-0.5">01:20</p>
                         </div>
-                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-2.5">
+                        <div className="bg-bg-tertiary/70 border border-border-custom/40 rounded-lg py-1.5">
                             <p className="text-[10px] font-bold text-text-secondary tracking-wider uppercase">
                                 {t('modals.level_complete.stats.xp')}
                             </p>
@@ -106,11 +106,11 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                     </div>
 
                     {/* Acciones / Botones */}
-                    <div className="mt-6 space-y-2.5">
+                    <div className="mt-3 space-y-2.5">
                         <Button
                             intent="solid"
                             color="green"
-                            className="w-full h-12 rounded-xl text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-green)_25%,transparent)] hover:shadow-[0_4px_25px_color-mix(in_srgb,var(--color-accent-green)_40%,transparent)] flex items-center justify-center gap-1"
+                            className="w-full h-9.5 rounded-md text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-green)_25%,transparent)] hover:shadow-[0_4px_25px_color-mix(in_srgb,var(--color-accent-green)_40%,transparent)] flex items-center justify-center gap-1"
                             onClick={() => {
                                 navigate(`/levels/${levelInfo!.id + 1}`);
                             }}
@@ -123,7 +123,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                             <Button
                                 intent="solid"
                                 color="pink"
-                                className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                className="flex-1 h-9.5 rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                 onClick={() => {
                                     setStatusType('info');
                                     setShowStatusLevel(false);
@@ -135,7 +135,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                             <Button
                                 intent="solid"
                                 color="orange"
-                                className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                className="flex-1 h-9.5 rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                 onClick={() => {
                                     handleResetLevel();
                                 }}
@@ -145,7 +145,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
                             <Button
                                 intent="solid"
                                 color="red"
-                                className="flex-1 h-11 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                className="flex-1 h-9.5 rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                 onClick={() => {
                                     handleLoadLevel(levelInfo!.id);
                                 }}

@@ -31,7 +31,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
             open
         >
             <div
-                className="relative overflow-hidden w-[350px] lg:w-[500px] rounded-xl border border-accent-red/15 bg-linear-to-b from-bg-secondary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_color-mix(in_srgb,var(--color-accent-red)_8%,transparent)] animate-slide-up"
+                className="relative overflow-hidden w-[350px] lg:w-[500px] max-h-[99svh] rounded-xl border border-accent-red/15 bg-linear-to-b from-bg-secondary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_color-mix(in_srgb,var(--color-accent-red)_8%,transparent)] animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Línea decorativa superior con tu rojo de acento */}
@@ -60,19 +60,19 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                     </div>
 
                     {/* El mensaje de error (Tu prop principal) */}
-                    <div className="my-5 p-3 bg-bg-panel border border-border-custom rounded-md min-h-[60px] flex items-center justify-center">
+                    <div className="my-3 p-3 bg-bg-panel border border-border-custom rounded-md min-h-[60px] flex items-center justify-center">
                         <p className="text-text-secondary text-sm font-medium tracking-wide leading-relaxed">
                             {message || t('modals.level_error.default_msg')}
                         </p>
                     </div>
 
                     {/* Acciones principales */}
-                    <div className="mt-6 space-y-2.5">
+                    <div className="mt-3 space-y-2.5">
                         {/* Botón primario: REINTENTAR (Usa el color amarillo/naranja mecánico) */}
                         <Button
                             intent="solid"
                             color="yellow"
-                            className="w-full h-12 rounded-md text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-yellow)_20%,transparent)] flex items-center justify-center gap-2"
+                            className="w-full h-9.5 rounded-md text-base font-black tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_color-mix(in_srgb,var(--color-accent-yellow)_20%,transparent)] flex items-center justify-center gap-2"
                             onClick={() => {
                                 setShowStatusLevel(false);
                                 handleRetryLevel();
@@ -88,7 +88,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                                 <Button
                                     intent="solid"
                                     color="purple"
-                                    className="flex-1 h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                    className="flex-1 h-9.5 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                                     onClick={() => {
                                         setShowStatusLevel(false);
                                         onGoToMenu();
@@ -101,7 +101,7 @@ const LevelErrorModal: React.FC<LevelErrorModalProps> = ({
                             <Button
                                 intent="solid"
                                 color="red"
-                                className="flex-1 h-11 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                className="flex-1 h-9.5 rounded-md font-bold text-sm tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                                 onClick={() => {
                                     setShowStatusLevel(false);
                                     handleRestartLevel();
