@@ -64,9 +64,6 @@ export function Level() {
         }
         if (status.startsWith('error:')) {
             const err = status.substring(6);
-            console.log(status);
-            console.log(t(`errors.${err}`));
-            console.log(err);
             return t('app.error_prefix', { message: t(`errors.${err}`, { defaultValue: err }) });
         }
         if (status === 'running') {
@@ -124,7 +121,6 @@ export function Level() {
         };
 
         const onExecutionComplete = (data: { success: boolean; message: string }) => {
-            console.log('data', data);
             if (!data.success) {
                 setStatusMessage('incomplete');
                 setStatusType('error');
@@ -192,10 +188,8 @@ export function Level() {
     // ------------------------------------------------------------
     useEffect(() => {
         const currentLevel = levels.find(l => l.id === levelInfo?.id);
-        console.log("currentLevel", currentLevel)
         const levelsWhitTutorial = [1, 11, 21, 26, 31, 38]
         if (currentLevel && currentLevel?.stars > 0 || (!levelsWhitTutorial.includes(currentLevel?.id ?? 0))) return
-        console.log("ENTRO")
 
         let steps: DriveStep[] = []
 
