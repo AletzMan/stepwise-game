@@ -24,7 +24,7 @@ export default function Levels() {
     const [direction, setDirection] = useState(0);
 
     return (
-        <div className="min-h-screen bg-bg-primary relative overflow-hidden flex flex-col items-center select-none px-4 py-12 md:py-16">
+        <div className="min-h-screen bg-bg-primary relative overflow-hidden flex flex-col items-center select-none px-4 py-12 lg:py-16">
             <div className="absolute top-0 left-0 z-10 flex flex-row gap-2 items-center">
                 <NavLink
                     to="/"
@@ -57,21 +57,21 @@ export default function Levels() {
             {/* CONTENEDOR PRINCIPAL */}
             <div className="max-w-4xl w-full z-10 animate-slide-up flex flex-col items-center">
                 {/* TÍTULO DE LA PÁGINA */}
-                <h1 className="font-['Titan_One'] text-4xl md:text-7xl tracking-[3px] bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]  text-center">
+                <h1 className="font-['Titan_One'] text-4xl lg:text-7xl tracking-[3px] bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]  text-center">
                     {t('levels.title')}
                 </h1>
 
-                <p className="font-outfit text-sm md:text-base text-text-secondary tracking-wide mb-2 md:mb-14 text-center max-w-md leading-relaxed">
+                <p className="font-outfit text-sm lg:text-base text-text-secondary tracking-wide mb-2 lg:mb-14 text-center max-w-md leading-relaxed">
                     {t('levels.subtitle')}
                 </p>
-                <div className="flex items-center justify-center gap-4 md:gap-6 mb-4 md:mb-10">
+                <div className="flex items-center justify-center gap-4 lg:gap-6 mb-4 lg:mb-10">
                     <button
                         disabled={currentDifficulty <= 1}
                         onClick={() => {
                             setDirection(-1);
                             setCurrentDifficulty((prev) => (prev - 1) as DifficultyLevel);
                         }}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs md:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:-translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs lg:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:-translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
                     >
                         <ChevronLeft size={16} />
                         {t('levels.previous')}
@@ -89,7 +89,7 @@ export default function Levels() {
                             setDirection(1);
                             setCurrentDifficulty((prev) => (prev + 1) as DifficultyLevel);
                         }}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs md:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 w-28 sm:w-32 text-xs lg:text-sm font-jetbrains font-bold tracking-wider text-text-secondary bg-bg-secondary/40 backdrop-blur-md border border-border-custom rounded-full hover:border-accent-cyan hover:text-accent-cyan hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:translate-x-1 transition-all disabled:opacity-30 disabled:pointer-events-none"
                     >
                         {t('levels.next')}
                         <ChevronRight size={16} />
@@ -97,7 +97,7 @@ export default function Levels() {
                 </div>
 
                 {/* MAPA DE SECTORES (GRID TÁCTICA) */}
-                <div className="relative w-full h-[calc(100svh-210px)] md:h-[calc(100svh-350px)] overflow-hidden">
+                <div className="relative w-full h-[calc(100svh-210px)] lg:h-[calc(100svh-350px)] overflow-hidden">
                     <AnimatePresence initial={false} custom={direction} mode="wait">
                         <motion.div
                             key={currentDifficulty}
@@ -120,14 +120,14 @@ export default function Levels() {
                             animate="center"
                             exit="exit"
                             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                            className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-2 md:gap-4 p-1 w-full justify-center items-center h-full overflow-y-auto"
+                            className="grid grid-cols-[repeat(auto-fit,minmax(128px,128px))] grid-rows-[repeat(auto-fit,minmax(128px,128px))] gap-2 lg:gap-4 p-1 w-full justify-center items-center h-full overflow-y-auto"
                         >
                             {currentDifficulty > 4 && (
                                 <div className="col-span-full row-span-full bg-bg-secondary border border-border-custom rounded-sm p-4 mt-10 flex flex-col gap-4">
                                     <h1 className="font-['Titan_One'] text-center  text-lg bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-full wrap-break-word">
                                         {t('levels.noMoreLevels')}
                                     </h1>
-                                    <p className="font-outfit text-sm md:text-base text-text-secondary tracking-wide mb-2 md:mb-14 text-center max-w-md leading-relaxed">
+                                    <p className="font-outfit text-sm lg:text-base text-text-secondary tracking-wide mb-2 lg:mb-14 text-center max-w-md leading-relaxed">
                                         {t('levels.moreLevels').split('.')[0]}
                                     </p>
                                     <span className="font-['Titan_One'] text-center  text-lg bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-full wrap-break-word">{t('levels.moreLevels').split('.')[1]}</span>

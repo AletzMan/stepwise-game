@@ -30,7 +30,7 @@ const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
             open
         >
             <div
-                className="relative overflow-hidden w-[350px] md:w-[500px] rounded-xl border border-accent-cyan/15 bg-linear-to-b from-bg-secondary via-bg-primary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_50px_-10px_color-mix(in_srgb,var(--color-accent-cyan)_10%,transparent)] animate-slide-up"
+                className="relative overflow-hidden w-[350px] lg:w-[500px] rounded-xl border border-accent-cyan/15 bg-linear-to-b from-bg-secondary via-bg-primary to-bg-primary shadow-[0_24px_60px_-15px_rgba(0,0,0,0.9),0_0_50px_-10px_color-mix(in_srgb,var(--color-accent-cyan)_10%,transparent)] animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Línea decorativa superior */}

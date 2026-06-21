@@ -13,12 +13,12 @@ export default function Home() {
             />
 
             {/*  DESTELLOS ATMOSFÉRICOS */}
-            <div className="absolute -top-40 -left-40 w-72 h-72 md:w-96 md:h-96 bg-accent-purple/5 blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-40 -right-40 w-72 h-72 md:w-96 md:h-96 bg-accent-cyan/5 blur-[100px] md:blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute -top-40 -left-40 w-72 h-72 lg:w-96 lg:h-96 bg-accent-purple/5 blur-[100px] lg:blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-40 -right-40 w-72 h-72 lg:w-96 lg:h-96 bg-accent-cyan/5 blur-[100px] lg:blur-[120px] rounded-full pointer-events-none" />
 
-            {/* 📐 MARCOS DE INTERFAZ DE CIENCIA FICCIÓN: Ocultos en móvil (`hidden md:flex`) para evitar colisiones */}
+            {/* 📐 MARCOS DE INTERFAZ DE CIENCIA FICCIÓN: Ocultos en móvil (`hidden lg:flex`) para evitar colisiones */}
 
-            <div className="absolute bottom-6 left-6 font-jetbrains text-[10px] text-text-muted tracking-[3px] hidden md:flex items-center gap-2">
+            <div className="absolute bottom-6 left-6 font-jetbrains text-[10px] text-text-muted tracking-[3px] hidden lg:flex items-center gap-2">
                 <CodeXml size={12} className="text-accent-orange" />
                 <span>© 2026 // BY: A. GARCÍA ALONSO</span>
             </div>
@@ -36,9 +36,9 @@ export default function Home() {
                 </div>
 
                 {/*  */}
-                <LogoSteps className="w-20 h-20 md:w-40 md:h-40" />
+                <LogoSteps className="w-20 h-20 lg:w-40 lg:h-40" />
                 {/* LOGO DE STEPWISE (Escalado de text-5xl en móvil a text-9xl en escritorio) */}
-                <h1 className="font-['Titan_One'] text-4xl md:text-6xl lg:text-8xl tracking-[2px] sm:tracking-[4px] bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] mb-4 w-full wrap-break-word">
+                <h1 className="font-['Titan_One'] text-4xl lg:text-6xl lg:text-8xl tracking-[2px] sm:tracking-[4px] bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] mb-4 w-full wrap-break-word">
                     STEP
                     <span className="bg-linear-to-r from-accent-cyan via-accent-cyan to-accent-purple bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(34,211,238,0.35)]">
                         WISE
@@ -46,7 +46,7 @@ export default function Home() {
                 </h1>
 
                 {/* Subtítulo (Ajuste de text-base a text-xl y márgenes optimizados) */}
-                <p className="font-outfit text-base md:text-xl text-text-secondary max-w-xl mx-auto mb-8 md:mb-14 tracking-wide leading-relaxed balance">
+                <p className="font-outfit text-base lg:text-xl text-text-secondary max-w-xl mx-auto mb-8 lg:mb-14 tracking-wide leading-relaxed balance">
                     Un paso a la vez. Piensa la lógica, ordena tus comandos y supera los obstáculos para encontrar la ruta perfecta hacia la meta.
                 </p>
 
@@ -54,8 +54,8 @@ export default function Home() {
                 <NavLink
                     to="/levels"
                     className="
-                        relative flex items-center justify-center gap-3 md:gap-4 px-6 md:px-14 py-2 md:py-5 w-full sm:w-auto
-                        font-outfit font-black text-lg md:text-2xl tracking-wider text-accent-cyan uppercase
+                        relative flex items-center justify-center gap-3 lg:gap-4 px-6 lg:px-14 py-2 lg:py-5 w-full sm:w-auto
+                        font-outfit font-black text-lg lg:text-2xl tracking-wider text-accent-cyan uppercase
                         bg-accent-cyan/10 border border-accent-cyan/30 rounded-sm border-b-4
                         overflow-hidden transition-all duration-200 ease-out
                         hover:bg-accent-cyan/20 hover:border-accent-cyan hover:border-b-4 hover:translate-y-[-2px]

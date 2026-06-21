@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
                     title={t('levels.back')}
                     className="flex flex-row gap-1 items-center"
                 >
-                    <LogoSteps className="w-14 md:w-20 h-14" />
+                    <LogoSteps className="w-14 lg:w-20 h-14" />
 
                     <h1 className="font-['Titan_One'] text-lg hidden sm:block bg-linear-to-b from-text-primary via-text-primary to-text-secondary bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-full wrap-break-word">
                         STEP
@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
             {/* Centro: Info del Nivel Estilizada */}
             <div className="flex items-center justify-center w-full">
                 {levelInfo && (
-                    <div className="flex flex-col md:flex-row max-md:w-40 items-center gap-3 py-1 max-md:py-2 md:px-4 bg-linear-to-r from-accent-cyan/5 via-accent-cyan/10 to-accent-cyan/5 border-x border-accent-cyan/30 rounded-md shadow-[inset_0_0_10px_rgba(34,211,238,0.05)]">
+                    <div className="flex flex-col lg:flex-row max-lg:w-40 items-center gap-3 py-1 max-lg:py-2 lg:px-4 bg-linear-to-r from-accent-cyan/5 via-accent-cyan/10 to-accent-cyan/5 border-x border-accent-cyan/30 rounded-md shadow-[inset_0_0_10px_rgba(34,211,238,0.05)]">
                         <span className="font-jetbrains text-[1rem] text-center font-black text-accent-cyan uppercase tracking-[0.15em]">
                             {t('header.level', { id: levelInfo.id })}
                         </span>
@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ levelInfo }) => {
                     className="font-black tracking-wider transition-all duration-300"
                 >
                     <LayoutGrid size={14} strokeWidth={2.5} className="transition-transform duration-300" />
-                    <span className='hidden md:block'>{t('header.levels_btn')}</span>
+                    <span className='hidden lg:block'>{t('header.levels_btn')}</span>
                 </Button>
 
                 {/* Botón de Idioma */}
