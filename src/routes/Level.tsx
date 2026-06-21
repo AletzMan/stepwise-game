@@ -531,9 +531,10 @@ export function Level() {
         <div id="app" className="w-full h-screen flex justify-center items-center">
             <div className="flex flex-col w-full max-w-[1280px] h-screen p-2 gap-2">
                 {/* Encabezado */}
-                {!isMobileLandscape && <Header
+                <Header
                     levelInfo={levelInfo}
-                />}
+                    isMobileLandscape={isMobileLandscape}
+                />
 
                 {/* Superposición de estado del nivel */}
                 {showStatusLevel && (
